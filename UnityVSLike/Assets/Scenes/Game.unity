@@ -3440,12 +3440,12 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 7408771729379172540, guid: 476467a7d0a6b144cbe5a98ce156ccec,
         type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 4855136783426769900}
+      insertIndex: 0
+      addedObject: {fileID: 5157845889114287693}
     - targetCorrespondingSourceObject: {fileID: 7408771729379172540, guid: 476467a7d0a6b144cbe5a98ce156ccec,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5157845889114287693}
+      addedObject: {fileID: 4855136783426769900}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7408771729379172542, guid: 476467a7d0a6b144cbe5a98ce156ccec,
         type: 3}
@@ -6936,7 +6936,7 @@ Transform:
   m_GameObject: {fileID: 2592440472212001571}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0.12, y: -0.09899998, z: 0}
   m_LocalScale: {x: 0.43734366, y: 0.43734366, z: 0.43734366}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -7012,7 +7012,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   prefabBullet: {fileID: 3847154798493980954, guid: 5062fa99314fe7c4694cc5243d188e12,
     type: 3}
-  ShotPower: 100
+  ShotPower: 10
   searchRadius: 10
   bulletCount: 5
   spreadAngle: 30

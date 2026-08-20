@@ -113,7 +113,7 @@ public class ShotGun : MonoBehaviour
         GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
         Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
         Bullet bullet = copyBullet.GetComponent<Bullet>();
-        Debug.Log($"[Shotgun] 펠렛복사");
+        Debug.Log($"[Shotgun]:{copyBullet.transform.position} 펠렛복사");
 
         if (bullet != null)
         {
