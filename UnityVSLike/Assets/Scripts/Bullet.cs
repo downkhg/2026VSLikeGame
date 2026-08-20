@@ -25,6 +25,7 @@ public class Bullet : MonoBehaviour
 
         if(fDist >= 1)
         {
+            Debug.Log($"Out Distance:{gameObject.name}");
             Destroy(gameObject);
         }
     }
@@ -42,5 +43,10 @@ public class Bullet : MonoBehaviour
                 GameManager.GetInstacne().monsterInventory.AddMonster(target.name);
             //Destroy(collision.gameObject);
         }
+    }
+
+    private void OnDestroy()
+    {
+        Debug.Log($"OnDestroy:{gameObject.name}");
     }
 }

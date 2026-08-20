@@ -91,6 +91,7 @@ public class Dynamic : MonoBehaviour
         {
             Destroy(collision.gameObject);
             GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+            Debug.Log($"{this.gameObject.name}.OnTriggerEnter2D:{collision.gameObject.name}");
         }
     }
 }
