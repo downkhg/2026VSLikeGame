@@ -68,6 +68,7 @@
     <Compile Include="Assets\Scripts\Bullet\Bullet.cs" />
     <Compile Include="Assets\Scripts\GUIStatusBar.cs" />
     <Compile Include="Assets\Scripts\GUIIventoryButton.cs" />
+    <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
     <Compile Include="Assets\Scripts\Guns\LightningShield.cs" />
     <Compile Include="Assets\Scripts\Guns\ShotGun.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Assets\Scripts\SuperMode.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Guns\BlockGun.cs" />
     <Compile Include="Assets\Scripts\CameraTracker.cs" />
     <Compile Include="Assets\Scripts\Bullet\LightningBullet.cs" />
     <Compile Include="Assets\Scripts\Item.cs" />
