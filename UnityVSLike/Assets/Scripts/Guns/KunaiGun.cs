@@ -64,6 +64,7 @@ public class KunaiGun : MonoBehaviour
         if (rigidbody != null)
         {
             rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
+            Debug.Log("[KunaiGun] 생성된 쿠나이 프리팹에 'rigidbody' 컴포넌트가 있습니다.");
         }
         else
         {
@@ -93,6 +94,7 @@ public class KunaiGun : MonoBehaviour
         if (nearestEnemy != null)
         {
             Shot(nearestEnemy, master);
+            Debug.Log($"[KunaiGun] 가장 가까운 적을 공격합니다. (탐색 반경: {searchRadius})");
         }
         else
         {

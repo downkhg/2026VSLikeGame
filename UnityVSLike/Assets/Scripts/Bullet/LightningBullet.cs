@@ -72,7 +72,7 @@ public class LightningBullet : MonoBehaviour
 
     private void OnDestroy()
     {
-        Debug.LogError($"[LightningBullet Lifecycle] OnDestroy (파괴됨): {vStart},{this.transform.position}/{gameObject.name}");
+        Debug.Log($"[LightningBullet Lifecycle] OnDestroy (파괴됨): {vStart},{this.transform.position}/{gameObject.name}");
     }
 
     private void OnDrawGizmosSelected()

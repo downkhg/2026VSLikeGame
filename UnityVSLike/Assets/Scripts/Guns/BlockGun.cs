@@ -58,7 +58,7 @@ public class BlockGun : MonoBehaviour
         else
         {
             // 2. 대상이 없을 때: 위쪽으로 쏘되 약간 앞(우측)으로 치우친 방향
-            targetPos = transform.position + (ownerPlayer.GetComponent<Dynamic>().dir * 1.5f + Vector3.up).normalized ;
+            targetPos = transform.position + (ownerPlayer.GetComponent<Dynamic>().dir * 1.3f + Vector3.up).normalized ;
         }
 
         Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, 45f); // 45도 투사각 예시
