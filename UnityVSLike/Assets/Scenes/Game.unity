@@ -252,6 +252,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1695819}
   m_CullTransparentMesh: 0
+--- !u!1 &34439232
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 34439233}
+  - component: {fileID: 34439234}
+  m_Layer: 0
+  m_Name: SoccerGun
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &34439233
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 34439232}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1031182663}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &34439234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 34439232}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73325402cc8d96f4598f625193f43ad8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  prefabSoccerBullet: {fileID: 6818155418747917617, guid: 4e538410e081a2c409c06c6754bf354e,
+    type: 3}
+  shotPower: 12
+  searchRadius: 10
+  fireInterval: 2
+  master: {fileID: 1031182656}
+  monsterLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!1 &48714279
 GameObject:
   m_ObjectHideFlags: 0
@@ -3651,6 +3704,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1415021974}
+    - targetCorrespondingSourceObject: {fileID: 7408771729379172540, guid: 476467a7d0a6b144cbe5a98ce156ccec,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 34439233}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7408771729379172542, guid: 476467a7d0a6b144cbe5a98ce156ccec,
         type: 3}
@@ -5087,7 +5144,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1415021974
 Transform:
   m_ObjectHideFlags: 0
@@ -6471,7 +6528,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1926401699
 Transform:
   m_ObjectHideFlags: 0

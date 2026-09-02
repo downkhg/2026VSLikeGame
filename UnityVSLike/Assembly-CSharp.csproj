@@ -66,11 +66,13 @@
     <Compile Include="Assets\Scripts\Responner.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
     <Compile Include="Assets\Scripts\Bullet\RocketBullet.cs" />
+    <Compile Include="Assets\Scripts\Bullet\SoccerBullet.cs" />
     <Compile Include="Assets\Scripts\Bullet\Bullet.cs" />
     <Compile Include="Assets\Scripts\GUIStatusBar.cs" />
     <Compile Include="Assets\Scripts\GUIIventoryButton.cs" />
     <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
+    <Compile Include="Assets\Scripts\Guns\SoccerGun.cs" />
     <Compile Include="Assets\Scripts\Bullet\ExplosionEffect.cs" />
     <Compile Include="Assets\Scripts\Guns\LightningShield.cs" />
     <Compile Include="Assets\Scripts\Guns\ShotGun.cs" />
