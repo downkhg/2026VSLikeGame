@@ -13,7 +13,7 @@ public class Item : MonoBehaviour
         if(dynamic)
         {
             dynamic.Score += Score;
-            Destroy(this.gameObject);
+            //Destroy(this.gameObject);
         }
     }
 }

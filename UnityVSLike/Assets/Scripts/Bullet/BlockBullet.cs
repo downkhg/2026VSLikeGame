@@ -50,7 +50,7 @@ public class BlockBullet : MonoBehaviour
         rb.linearVelocity = velocity;
 
         // 자동 소멸 타이머 시작
-        Destroy(gameObject, destroyDelay + 2f);
+        //Destroy(gameObject, destroyDelay + 2f);
     }
 
     // 2. 대상이 없을 때: 윗쪽+약간 앞으로 직진 비행 후 중력 적용
@@ -68,7 +68,7 @@ public class BlockBullet : MonoBehaviour
         if (isFalling) return;
         isFalling = true;
 
-        Destroy(gameObject, destroyDelay);
+        //Destroy(gameObject, destroyDelay);
     }
 
     // Trigger 콜라이더와 충돌 시 처리
@@ -77,7 +77,7 @@ public class BlockBullet : MonoBehaviour
         // 땅(지면)에 닿았을 때 삭제 처리
         if (collision.CompareTag("Ground") || collision.CompareTag("Floor") || collision.CompareTag("Tilemap"))
         {
-            Destroy(gameObject);
+            //Destroy(gameObject);
             return;
         }
 
@@ -95,7 +95,7 @@ public class BlockBullet : MonoBehaviour
             currentHitCount++;
             if (currentHitCount >= maxHitCount)
             {
-                Destroy(gameObject);
+                //Destroy(gameObject);
             }
         }
     }
@@ -105,7 +105,7 @@ public class BlockBullet : MonoBehaviour
     {
         if (collision.gameObject.CompareTag("Ground") || collision.gameObject.CompareTag("Floor") || collision.gameObject.CompareTag("Tilemap"))
         {
-            Destroy(gameObject);
+            //Destroy(gameObject);
         }
     }
 }

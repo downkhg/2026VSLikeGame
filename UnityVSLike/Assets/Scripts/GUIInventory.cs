@@ -39,7 +39,7 @@ public class GUIInventory : MonoBehaviour
     {
         foreach (var button in listGuiIventoryButtons)
         {
-            Destroy(button.gameObject);
+            //Destroy(button.gameObject);
         }
         listGuiIventoryButtons.Clear();
     }

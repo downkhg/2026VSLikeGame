@@ -57,7 +57,7 @@ public class Dynamic : MonoBehaviour
 
         if (transform.position.y < -4)
         {
-            Destroy(this.gameObject);
+            //Destroy(this.gameObject);
         }
     }
 
@@ -89,7 +89,7 @@ public class Dynamic : MonoBehaviour
         //}
         if (collision.gameObject.tag == "Object")
         {
-            Destroy(collision.gameObject);
+            //Destroy(collision.gameObject);
             GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
             Debug.Log($"{this.gameObject.name}.OnTriggerEnter2D:{collision.gameObject.name}");
         }

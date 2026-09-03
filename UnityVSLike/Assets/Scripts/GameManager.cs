@@ -182,6 +182,6 @@ public class GameManager : MonoBehaviour
         EaglePointSetting();
         UpdateGUIStatus();
         if(responnerPlayer.objPlayer)
-            guiPlayerInfo.Set(responnerPlayer.objPlayer.GetComponent<Player>());
+            if(guiPlayerInfo) guiPlayerInfo.Set(responnerPlayer.objPlayer.GetComponent<Player>());
     }
 }

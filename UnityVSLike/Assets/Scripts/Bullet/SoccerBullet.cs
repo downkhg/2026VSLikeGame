@@ -29,7 +29,7 @@ public class SoccerBullet : Bullet
     private void Start()
     {
         Debug.Log($"[SoccerBullet] 축구공 생성됨 | 위치: {transform.position}"); 
-        //Destroy(gameObject, lifeTime);
+        Destroy(gameObject, lifeTime);
     }
 
     private void Update()
@@ -41,6 +41,8 @@ public class SoccerBullet : Bullet
         lastVelocity = rb.linearVelocity;
     }
 
+
+    //private void OnTriggerEnter2D(Collider2D collision)
     private void OnCollisionEnter2D(Collision2D collision)
     {
         currentBounceCount++;
@@ -85,7 +87,7 @@ public class SoccerBullet : Bullet
         if (currentBounceCount >= maxBounceCount)
         {
             Debug.Log("[SoccerBullet] 최대 반사 횟수 도달로 인한 파괴");
-            //Destroy(gameObject);
+            Destroy(gameObject);
         }
     }
 

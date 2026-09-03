@@ -66,7 +66,7 @@ public class Bullet : MonoBehaviour
             }
 
             // 몬스터 충돌 시 탄환 파괴
-            Destroy(gameObject);
+            //Destroy(gameObject);
         }
     }
 
