@@ -135,7 +135,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &34439233
 Transform:
   m_ObjectHideFlags: 0
@@ -1053,6 +1053,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 34439233}
+    - targetCorrespondingSourceObject: {fileID: 7408771729379172540, guid: 476467a7d0a6b144cbe5a98ce156ccec,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1844479742}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7408771729379172542, guid: 476467a7d0a6b144cbe5a98ce156ccec,
         type: 3}
@@ -1485,6 +1489,58 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   objTarget: {fileID: 1031182655}
   Speed: 1
+--- !u!1 &1844479741
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1844479742}
+  - component: {fileID: 1844479743}
+  m_Layer: 0
+  m_Name: BaseballBat
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1844479742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844479741}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0.6815676, y: -0.46356243, z: 0.004607157}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1031182663}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1844479743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1844479741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6aed549dda44ec4c8f9f0767b415dde, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxRadius: 5
+  minRadius: 1
+  attackAngle: 90
+  damage: 20
+  knockbackForce: 10
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!114 &1845123010 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8140706842961109644, guid: b887a2f70cdb1774fb95d889e04a4e5c,

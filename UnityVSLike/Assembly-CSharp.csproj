@@ -87,6 +87,7 @@
     <Compile Include="Assets\Scripts\CameraTracker.cs" />
     <Compile Include="Assets\Scripts\Bullet\LightningBullet.cs" />
     <Compile Include="Assets\Scripts\Item.cs" />
+    <Compile Include="Assets\Scripts\BaseballBatAttack.cs" />
     <Compile Include="Assets\Scripts\MonsterInventory.cs" />
     <Compile Include="Assets\Scripts\Guns\KunaiGun.cs" />
     <Compile Include="Assets\Scripts\House.cs" />
