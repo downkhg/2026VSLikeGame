@@ -24,7 +24,7 @@ public class GameManager : MonoBehaviour
 
     public GameObject objPopupLayer;
     public GUIInventory guiInventory;
-    
+
 
     public enum E_GUI_STATUS { TITILE, GAMEOVER, THEEND, PLAY }
     public List<GameObject> listGUIScence;
@@ -33,16 +33,24 @@ public class GameManager : MonoBehaviour
     private void Start()
     {
         EventShowMeTheItem();
-        guiInventory.SetInventory(monsterInventory);
+
+        if (guiInventory != null)
+            guiInventory.SetInventory(monsterInventory);
+
         SetGUIStatus(curGUIStatus);
     }
 
     public void ShowGUIScence(int idx)
     {
-        for(int i = 0; i < listGUIScence.Count; i++)
+        if (listGUIScence == null) return;
+
+        for (int i = 0; i < listGUIScence.Count; i++)
         {
-            if (i == idx) listGUIScence[i].SetActive(true);
-            else listGUIScence[i].SetActive(false);
+            if (listGUIScence[i] != null)
+            {
+                if (i == idx) listGUIScence[i].SetActive(true);
+                else listGUIScence[i].SetActive(false);
+            }
         }
     }
 
@@ -86,21 +94,27 @@ public class GameManager : MonoBehaviour
 
     public void PopupLayerShow(bool active)
     {
-        if (active)
-            guiInventory.SetInventory(monsterInventory);
-        else
-            guiInventory.CloseIventory();
-        
-        objPopupLayer.SetActive(active);
+        if (guiInventory != null)
+        {
+            if (active)
+                guiInventory.SetInventory(monsterInventory);
+            else
+                guiInventory.CloseIventory();
+        }
+
+        if (objPopupLayer != null)
+            objPopupLayer.SetActive(active);
     }
 
     public void EventInventoryInput()
     {
+        if (objPopupLayer == null) return;
+
         if (Input.GetKeyDown(KeyCode.I))
         {
             if (objPopupLayer.activeSelf)
             {
-                PopupLayerShow(false);  
+                PopupLayerShow(false);
             }
             else
             {
@@ -132,7 +146,9 @@ public class GameManager : MonoBehaviour
 
     public void EventGameOverProcess()
     {
-        if(responnerPlayer.objPlayer == null)
+        if (responnerPlayer == null) return;
+
+        if (responnerPlayer.objPlayer == null)
         {
             SetGUIStatus(E_GUI_STATUS.GAMEOVER);
         }
@@ -140,6 +156,8 @@ public class GameManager : MonoBehaviour
 
     public void EventShowMeTheItem()
     {
+        if (monsterInventory == null) return;
+
         for (int i = 0; i < 5; i++)
         {
             monsterInventory.AddMonster("fox");
@@ -151,18 +169,24 @@ public class GameManager : MonoBehaviour
 
     void CameraTrackingTargetPlayerProcess()
     {
-        if(mainCameraTracker.objTarget == null)
+        if (mainCameraTracker == null || responnerPlayer == null) return;
+
+        if (mainCameraTracker.objTarget == null)
         {
-            if(responnerPlayer.objPlayer != null)
+            if (responnerPlayer.objPlayer != null)
                 mainCameraTracker.objTarget = responnerPlayer.objPlayer;
         }
     }
 
     void EaglePointSetting()
     {
-        if(responnerEagle.objPlayer)
+        if (responnerEagle == null || responnerOpossum == null) return;
+
+        if (responnerEagle.objPlayer != null)
         {
             Eagle eagle = responnerEagle.objPlayer.GetComponent<Eagle>();
+
+            if (eagle == null) return;
 
             if (eagle.objPatrolPoint == null && eagle.objResponPoint == null)
             {
@@ -181,7 +205,17 @@ public class GameManager : MonoBehaviour
         CameraTrackingTargetPlayerProcess();
         EaglePointSetting();
         UpdateGUIStatus();
-        if(responnerPlayer.objPlayer)
-            if(guiPlayerInfo) guiPlayerInfo.Set(responnerPlayer.objPlayer.GetComponent<Player>());
+
+        if (responnerPlayer != null && responnerPlayer.objPlayer != null)
+        {
+            if (guiPlayerInfo != null)
+            {
+                Player playerComp = responnerPlayer.objPlayer.GetComponent<Player>();
+                if (playerComp != null)
+                {
+                    guiPlayerInfo.Set(playerComp);
+                }
+            }
+        }
     }
 }

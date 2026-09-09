@@ -17,106 +17,131 @@ public class BaseballBatAttack : MonoBehaviour
     public float knockbackForce = 10.0f;
     public LayerMask targetLayer;
 
-    // 공격 실행 및 판정 확인 함수
-    public void PerformAttack()
+    [Header("휘두르기 옵션")]
+    public float swingSpeed = 360.0f; // degrees per second
+
+    public Player master;
+    public GameObject objTarget;
+
+    public BatSwing batSwing;
+
+    private void Awake()
     {
-        Debug.Log($"<color=yellow>[야구배트 공격 시작]</color> 위치: {transform.position}, 전방: {transform.forward}");
-
-        // 1. OverlapSphere로 maxRadius 내의 모든 대상 1차 감지
-        Collider[] targetsInMaxRadius = Physics.OverlapSphere(transform.position, maxRadius, targetLayer);
-
-        if (targetsInMaxRadius.Length == 0)
-        {
-            Debug.Log("[결과] 최대 사거리 내에 감지된 대상이 없습니다.");
-            return;
-        }
-
-        int hitCount = 0;
-
-        foreach (Collider targetCollider in targetsInMaxRadius)
-        {
-            Transform target = targetCollider.transform;
-
-            // P = 플레이어 위치, M = 몬스터 위치
-            Vector3 p = transform.position;
-            Vector3 m = target.position;
-
-            // d = (m - p).magnitude
-            Vector3 dirToTarget = (m - p);
-            float d = dirToTarget.magnitude;
-            Vector3 normalizedDir = dirToTarget.normalized;
-
-            // 2. 거리 조건 검증: br < d && d < rr
-            bool isDistanceValid = (d > minRadius && d < maxRadius);
-
-            // 3. 각도 조건 검증: 전방 기준 부채꼴 내부 판정
-            float angleToTarget = Vector3.Angle(transform.forward, normalizedDir);
-            bool isAngleValid = (angleToTarget <= attackAngle / 2.0f);
-
-            // 로그 출력: 각 타겟별 세부 데이터 확인
-            string targetName = targetCollider.name;
-
-            if (!isDistanceValid)
-            {
-                Debug.LogWarning($"[판정 실패 - 거리] 대상: {targetName} | 거리 d={d:F2} (허용 범위: {minRadius} < d < {maxRadius})");
-                // 씬 뷰에 실패선 표시 (주황색)
-                Debug.DrawLine(p, m, Color.magenta, 1.5f);
-            }
-            else if (!isAngleValid)
-            {
-                Debug.LogWarning($"[판정 실패 - 각도] 대상: {targetName} | 거리 d={d:F2} | 각도={angleToTarget:F1}° (허용 각도: ±{attackAngle / 2.0f}°)");
-                // 씬 뷰에 실패선 표시 (노란색)
-                Debug.DrawLine(p, m, Color.yellow, 1.5f);
-            }
-            else
-            {
-                // 성공 판정
-                hitCount++;
-                Debug.Log($"<color=green>[판정 성공 - 적격!]</color> 대상: {targetName} | 거리 d={d:F2} | 각도={angleToTarget:F1}°");
-
-                // 씬 뷰에 명중선 및 넉백 방향 표시 (녹색 & 빨간색)
-                Debug.DrawLine(p, m, Color.green, 1.5f);
-                Debug.DrawRay(m, normalizedDir * 2.0f, Color.red, 1.5f);
-
-                // 4. 피격 및 넉백 처리 실행
-                ApplyHitAndKnockback(targetCollider, normalizedDir);
-            }
-        }
-
-        Debug.Log($"<color=cyan>[공격 종료]</color> 총 피격 대상: {hitCount}명 / 범위 내 감지: {targetsInMaxRadius.Length}명");
+        batSwing.Init(swingSpeed, attackAngle);
     }
 
-    private void ApplyHitAndKnockback(Collider target, Vector3 knockbackDirection)
+    private void FixedUpdate()
     {
-        Rigidbody rb = target.GetComponent<Rigidbody>();
-        if (rb != null)
+        Vector3 vPos = transform.position;
+        Collider2D[] colliders =  Physics2D.OverlapCircleAll(vPos, maxRadius, targetLayer);
+
+        foreach(Collider2D collider in colliders)
         {
-            rb.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
-            Debug.Log($" └─ [넉백 적용] {target.name}에게 {knockbackForce}의 힘 전달");
+            objTarget = collider.gameObject;
+            break;
         }
-        else
+    }
+
+
+    //public float fDist; //디버깅을 할때 임시로 사용
+    public float fAngle;
+    void AttackProcess()
+    {
+        if (objTarget)
         {
-            Debug.LogWarning($" └─ [넉백 실패] {target.name}에 Rigidbody 컴포넌트가 없습니다.");
+            Vector3 vPos = transform.position;
+            Vector3 vTargetPos = objTarget.transform.position;
+            Vector3 vDist = vTargetPos - vPos;
+            float fDist = vDist.magnitude;
+            float fHalf = attackAngle * 0.5f;
+
+
+            if (fDist > maxRadius)
+            {
+                objTarget = null;
+                return;
+            }
+            else if (fDist > minRadius)
+            {
+                fAngle = Vector3.Angle(transform.right, vDist);
+
+                if (fAngle < fHalf)
+                {
+                    Player targetPlayer = objTarget.GetComponent<Player>();
+                    if (targetPlayer && master)
+                    {
+                        SuperMode supermode = targetPlayer.GetComponent<SuperMode>();
+                        if (!supermode.isUse)
+                        {
+                            batSwing.Init(swingSpeed, attackAngle);
+                            batSwing.Swing();
+                            //master.Attack(targetPlayer);
+                            supermode.OnMode();
+                            Debug.Log("Bat Attack!");
+                        }
+                    }
+                    return;
+                }
+            }
+            
         }
+    }
+
+
+    public float maxTime = 0.5f;
+    public float currentTime = 0.0f;
+
+    void UpdateTime()
+    {
+        currentTime += Time.deltaTime;
+
+        if (currentTime >= maxTime)
+        {
+            currentTime = 0.0f;
+            AttackProcess();
+        }
+    }
+
+    private void Update()
+    {
+        UpdateTime();
     }
 
     // 에디터 씬 뷰 상시/선택 시 visualizer (부채꼴 및 최소/최대 사거리 그리기)
     private void OnDrawGizmosSelected()
     {
+        float fHalf = attackAngle * 0.5f;
         Vector3 position = transform.position;
+        Vector3 vBase = transform.right;
+        Vector3 vRight;
+        Vector3 vLeft;
+        Quaternion qMultiple;
+        Vector3 vLineEnd;
 
-        // 최대 사거리 (rr) - 파란색 원
-        Gizmos.color = Color.blue;
+        qMultiple = Quaternion.Euler(0, 0, fHalf);
+        vRight = qMultiple * vBase;
+        qMultiple = Quaternion.Euler(0, 0, -fHalf);
+        vLeft = qMultiple * vBase;
+
+        Gizmos.color = Color.yellow;
+        vLineEnd = position + vRight * maxRadius;
+        Gizmos.DrawLine(position, vLineEnd);
+        vLineEnd = position + vLeft * maxRadius;
+        Gizmos.DrawLine(position, vLineEnd);
+
+        // 최대 사거리 (rr)
+        Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(position, maxRadius);
 
-        // 최소 사거리 (br) - 빨간색 원
-        Gizmos.color = Color.red;
+        // 최소 사거리 (br) 
+        Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(position, minRadius);
 
         // 부채꼴 좌우 경계선 - 파란색 선
-        Vector3 leftBoundary = Quaternion.Euler(0, -attackAngle / 2.0f, 0) * transform.forward;
-        Vector3 rightBoundary = Quaternion.Euler(0, attackAngle / 2.0f, 0) * transform.forward;
+        Vector3 leftBoundary = Quaternion.Euler(0, -attackAngle / 2.0f, 0) * transform.right;
+        Vector3 rightBoundary = Quaternion.Euler(0, attackAngle / 2.0f, 0) * transform.right;
 
+        Gizmos.color = new Color(0, 0, 1);
         Gizmos.DrawRay(position + leftBoundary * minRadius, leftBoundary * (maxRadius - minRadius));
         Gizmos.DrawRay(position + rightBoundary * minRadius, rightBoundary * (maxRadius - minRadius));
     }
