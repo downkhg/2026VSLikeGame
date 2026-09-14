@@ -61,15 +61,14 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.77f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\GUIInventory.cs" />
-    <Compile Include="Assets\Scripts\GUIPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
     <Compile Include="Assets\Scripts\Bullet\RocketBullet.cs" />
     <Compile Include="Assets\Scripts\Bullet\SoccerBullet.cs" />
+    <Compile Include="Assets\Scripts\DeckManager.cs" />
     <Compile Include="Assets\Scripts\Bullet\Bullet.cs" />
-    <Compile Include="Assets\Scripts\GUIStatusBar.cs" />
-    <Compile Include="Assets\Scripts\GUIIventoryButton.cs" />
+    <Compile Include="Assets\Scripts\GUI\CardUI.cs" />
+    <Compile Include="Assets\Scripts\Debuging\DeckManagerTester.cs" />
     <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
     <Compile Include="Assets\Scripts\Guns\SoccerGun.cs" />
@@ -78,8 +77,12 @@
     <Compile Include="Assets\Scripts\Guns\ShotGun.cs" />
     <Compile Include="Assets\Scripts\Eagle.cs" />
     <Compile Include="Assets\Scripts\Guns\Gun.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIInventory.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Dynamic.cs" />
+    <Compile Include="Assets\Scripts\GUI\HandUI.cs" />
     <Compile Include="Assets\Scripts\Guns\RocketLauncher.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIIventoryButton.cs" />
     <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
@@ -90,7 +93,9 @@
     <Compile Include="Assets\Scripts\Item.cs" />
     <Compile Include="Assets\Scripts\BaseballBatAttack.cs" />
     <Compile Include="Assets\Scripts\MonsterInventory.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIStatusBar.cs" />
     <Compile Include="Assets\Scripts\Guns\KunaiGun.cs" />
+    <Compile Include="Assets\Scripts\CardData.cs" />
     <Compile Include="Assets\Scripts\House.cs" />
   </ItemGroup>
   <ItemGroup>
