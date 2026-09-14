@@ -1,81 +1,58 @@
 using UnityEngine;
 
-public class DeckManagerTester : MonoBehaviour
+public class DeckTesterOnGUI : MonoBehaviour
 {
-    private DeckManager deckManager;
-
-    private void Start()
-    {
-        deckManager = DeckManager.Instance;
-        if (deckManager == null)
-        {
-            deckManager = FindFirstObjectByType<DeckManager>();
-        }
-    }
-
     private void OnGUI()
     {
-        if (deckManager == null)
+        if (DeckManager.Instance == null)
         {
-            GUI.Label(new Rect(10, 10, 300, 20), "Error: DeckManager를 찾을 수 없습니다.");
+            GUI.Label(new Rect(10, 10, 300, 20), "DeckManager 인스턴스를 찾을 수 없습니다.");
             return;
         }
 
-        // 1. 덱 상태 요약 정보 박스
-        GUILayout.BeginArea(new Rect(10, 10, 250, 400), "=== 덱 관리자 테스트 ===", GUI.skin.window);
-        
-        GUILayout.Label($"남은 덱 (Draw Pile): {deckManager.DrawPileCount}장");
-        GUILayout.Label($"버린 카드 (Discard): {deckManager.DiscardPileCount}장");
-        
+        // Left Panel: 덱 컨트롤 및 수치
+        GUILayout.BeginArea(new Rect(10, 10, 220, 350), "덱 상태 컨트롤", GUI.skin.window);
+        GUILayout.Label($"남은 덱 (Draw): {DeckManager.Instance.DrawPileCount}장");
+        GUILayout.Label($"버린 카드 (Discard): {DeckManager.Instance.DiscardPileCount}장");
         GUILayout.Space(10);
 
-        // 카드 1장 수동 드로우 버튼
         if (GUILayout.Button("카드 1장 뽑기 (Draw)", GUILayout.Height(30)))
         {
-            deckManager.DrawCard();
+            DeckManager.Instance.DrawCard();
         }
 
-        // 초기화 버튼
         if (GUILayout.Button("덱 초기화 (Reset)", GUILayout.Height(25)))
         {
-            deckManager.InitializeDeck();
+            DeckManager.Instance.ResetDeck();
         }
-
         GUILayout.EndArea();
 
-        // 2. 현재 손패(Hand) 목록 및 사용 버튼
-        var hand = deckManager.GetHand();
-        GUILayout.BeginArea(new Rect(270, 10, 450, 500), $"=== 현재 손패 ({hand.Count}장) ===", GUI.skin.window);
+        // Right Panel: 현재 손패 및 무기 발동 버튼
+        var hand = DeckManager.Instance.GetHand();
+        GUILayout.BeginArea(new Rect(240, 10, 400, 450), $"현재 손패 ({hand.Count}장)", GUI.skin.window);
 
         if (hand.Count == 0)
         {
-            GUILayout.Label("손패가 비어있습니다.");
+            GUILayout.Label("손패가 비어 있습니다. [Draw] 버튼을 눌러보세요.");
         }
         else
         {
             for (int i = 0; i < hand.Count; i++)
             {
-                CardData card = hand[i];
-                
+                var card = hand[i];
                 GUILayout.BeginHorizontal("box");
-                
-                // 카드 정보 요약 출력
-                string cardInfo = $"[{i}] {card.cardName} (비용:{card.manaCost})\n" +
-                                 $"타입: {card.cardType} / 무기: {card.targetWeapon}";
-                
-                GUILayout.Label(cardInfo, GUILayout.Width(300));
 
-                // 카드 사용 트리거 버튼
-                if (GUILayout.Button("사용 (Use)", GUILayout.Width(100), GUILayout.Height(35)))
+                string info = $"[{i}] {card.cardName}\n타입:{card.cardType} | 목표:{card.targetWeapon}";
+                GUILayout.Label(info, GUILayout.Width(260));
+
+                if (GUILayout.Button("사용 (Use)", GUILayout.Width(90), GUILayout.Height(35)))
                 {
-                    deckManager.UseCard(i);
+                    DeckManager.Instance.UseCard(i);
                 }
-
                 GUILayout.EndHorizontal();
                 GUILayout.Space(5);
             }
         }
-
         GUILayout.EndArea();
     }
 }
