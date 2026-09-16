@@ -82,8 +82,6 @@
     <Compile Include="Assets\Scripts\Dynamic.cs" />
     <Compile Include="Assets\Scripts\GUI\HandUI.cs" />
     <Compile Include="Assets\Scripts\Guns\RocketLauncher.cs" />
-    <Compile Include="Assets\Scripts\GUI\GUIIventoryButton.cs" />
-    <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
