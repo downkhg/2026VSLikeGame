@@ -9,7 +9,7 @@ public class Bullet : MonoBehaviour
     public float maxDistance = 10f; // 최대 이동 가능 거리
 
     private Vector3 vStart;
-    private Vector3 moveDirection = Vector3.right;
+    //private Vector3 moveDirection = Vector3.right;
 
     private void Awake()
     {
@@ -30,7 +30,7 @@ public class Bullet : MonoBehaviour
     void Update()
     {
         // 💡 등속 운동 공식 적용 (가속도 없는 일정한 속도 이동)
-        transform.position += moveDirection * speed * Time.deltaTime;
+        //transform.position += moveDirection * speed * Time.deltaTime;
 
         // 이동 거리 체크 후 파괴 처리
         float fDist = Vector3.Distance(vStart, transform.position);
@@ -39,17 +39,6 @@ public class Bullet : MonoBehaviour
             Debug.Log($"Out Distance[{fDist}]: {gameObject.name}");
             Destroy(gameObject);
         }
-    }
-
-    // 외부(ShotGun 등)에서 탄환의 이동 방향 및 속도를 설정하는 함수
-    public void InitBullet(Vector3 direction, float bulletSpeed)
-    {
-        moveDirection = direction.normalized;
-        speed = bulletSpeed;
-
-        // 이동 방향으로 탄환 회전 적용
-        float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
-        transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

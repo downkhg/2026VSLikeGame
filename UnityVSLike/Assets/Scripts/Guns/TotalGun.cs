@@ -30,7 +30,7 @@ public class TotalGun : MonoBehaviour
     private void Awake()
     {
         master = GetComponentInParent<Player>();
-        
+
         // Inspector에서 할당하지 않았을 경우 자동으로 자식/본인 객체에서 가져옴
         InitGunComponents();
     }
@@ -48,13 +48,27 @@ public class TotalGun : MonoBehaviour
         UpdateActiveGunState();
     }
 
-    // 2. 외부 호출용 메인 발사 메서드 (내부 하위 무기로 위임)
+    // 2-1. 기본 발사 (플레이어 기본 정면/자동 탐색 대상 발사)
     public void Shot()
+    {
+        Vector3 defaultDir = transform.right;
+
+        // 플레이어 좌우 반전(scale.x < 0) 처리 대응
+        if (master != null && master.transform.localScale.x < 0)
+        {
+            defaultDir = Vector3.left;
+        }
+
+        Shot(defaultDir);
+    }
+
+    // 2-2. 방향(Vector3) 지정 발사 (전방, 후방, 이동 방향 등 자유 지정 가능)
+    public void Shot(Vector3 dir)
     {
         switch (currentGunType)
         {
             case GunType.DefaultGun:
-                if (gun != null) gun.Shot(transform.right, master);
+                if (gun != null) gun.Shot(dir, master);
                 break;
 
             case GunType.KunaiGun:
@@ -62,7 +76,7 @@ public class TotalGun : MonoBehaviour
                 break;
 
             case GunType.ShotGun:
-                if (shotGun != null) shotGun.Shot(master);
+                if (shotGun != null) shotGun.Shot(dir, master);
                 break;
 
             case GunType.RocketLauncher:
@@ -78,7 +92,6 @@ public class TotalGun : MonoBehaviour
                 break;
 
             case GunType.LightningShield:
-                // LightningShield는 Update 기반 자동 발사이므로 필요 시 수동 호출
                 break;
         }
     }

@@ -52,7 +52,7 @@ public class Dynamic : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.X))
         {
-            gun.Shot();
+            gun.Shot(dir);
         }
 
         if (transform.position.y < -4)
