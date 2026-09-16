@@ -65,10 +65,7 @@
     <Compile Include="Assets\Scripts\Opossum.cs" />
     <Compile Include="Assets\Scripts\Bullet\RocketBullet.cs" />
     <Compile Include="Assets\Scripts\Bullet\SoccerBullet.cs" />
-    <Compile Include="Assets\Scripts\DeckManager.cs" />
     <Compile Include="Assets\Scripts\Bullet\Bullet.cs" />
-    <Compile Include="Assets\Scripts\GUI\CardUI.cs" />
-    <Compile Include="Assets\Scripts\Debuging\DeckManagerTester.cs" />
     <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
     <Compile Include="Assets\Scripts\Guns\SoccerGun.cs" />
@@ -80,11 +77,13 @@
     <Compile Include="Assets\Scripts\GUI\GUIInventory.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Dynamic.cs" />
-    <Compile Include="Assets\Scripts\GUI\HandUI.cs" />
     <Compile Include="Assets\Scripts\Guns\RocketLauncher.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIIventoryButton.cs" />
+    <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\Guns\TotalGun.cs" />
     <Compile Include="Assets\Scripts\Guns\BlockGun.cs" />
     <Compile Include="Assets\Scripts\CameraTracker.cs" />
     <Compile Include="Assets\Scripts\Bullet\LightningBullet.cs" />
@@ -93,13 +92,13 @@
     <Compile Include="Assets\Scripts\MonsterInventory.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIStatusBar.cs" />
     <Compile Include="Assets\Scripts\Guns\KunaiGun.cs" />
-    <Compile Include="Assets\Scripts\CardData.cs" />
     <Compile Include="Assets\Scripts\House.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\WorkList2.txt" />
     <None Include="Assets\WorkList.txt" />
     <None Include="Assets\용어정리.txt" />
+    <None Include="Assets\ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">

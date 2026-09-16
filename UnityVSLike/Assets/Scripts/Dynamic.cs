@@ -9,7 +9,7 @@ public class Dynamic : MonoBehaviour
     public int Score = 0;
     public float Speed = 1;
 
-    public Gun gun;
+    public TotalGun gun;
     public Vector3 dir = Vector3.right;
 
     // Update is called once per frame
@@ -52,7 +52,7 @@ public class Dynamic : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.X))
         {
-            gun.Shot(dir, GetComponent<Player>());
+            gun.Shot();
         }
 
         if (transform.position.y < -4)

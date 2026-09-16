@@ -37,7 +37,7 @@ public class LightningShield : MonoBehaviour
 
         if (timer >= strikeInterval)
         {
-            CastLightning();
+            Shot();
             timer = 0f;
         }
     }
@@ -56,7 +56,7 @@ public class LightningShield : MonoBehaviour
         }
     }
 
-    private void CastLightning()
+    private void Shot()
     {
         if (lightningBulletPrefab == null || currentTargets.Count == 0) return;
 
