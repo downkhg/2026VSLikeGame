@@ -78,11 +78,8 @@ public class ShotGun : MonoBehaviour
     // 메인 발사 진입점
     public void Shot(Vector3 dir, Player master)
     {
-        if (master == null || prefabBullet == null)
-        {
-            Debug.Log($"[Shotgun Action] 🎯 주인이나 프리펩이 셋팅 되지않았습니다!");
-            return;
-        }
+        if (master == null) return;
+        Transform target = currentTarget;
 
         UpdateTarget();
 
@@ -105,7 +102,26 @@ public class ShotGun : MonoBehaviour
             }
             else
             {
-                Debug.Log($"[Shotgun Action] 🔄 타겟이 조준 범위를 벗어남({angleDifference:F1}°) -> 정면 기준 발사 ({baseAngle:F1}°)");
+                Debug.Log($"[Shotgun Action] 🔄 조준 범위를 벗어남({angleDifference:F1}°) -> 정면 발사 ({baseAngle:F1}°)");
+            }
+
+            // 4. 인스턴스화 및 컴포넌트 데이터 세팅
+            GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
+            copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
+
+            Bullet bullet = copyBullet.GetComponent<Bullet>();
+            if (bullet != null)
+            {
+                bullet.master = master;
+                //bullet.InitBullet(dir, ShotPower);
+               
+            }
+
+            Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
+            if (rigidbody != null)
+            {
+                rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
+                copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
             }
         }
         else
