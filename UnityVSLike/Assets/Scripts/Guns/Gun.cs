@@ -5,15 +5,17 @@ using UnityEngine;
 public class Gun : MonoBehaviour
 {
     public GameObject prefabBullet;
-    public float ShotPower;
+    public float ShotPower = 10f;
 
     public void Shot(Vector3 dir, Player master)
     {
-        GameObject copyBullet = Instantiate(prefabBullet); 
-        Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
+        if (prefabBullet == null) return;
+
+        GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
-        bullet.master = master;
-        rigidbody.AddForce(dir * ShotPower);
-        copyBullet.transform.position = this.transform.position;
+        if (bullet != null)
+        {
+            bullet.Init(dir, master, ShotPower);
+        }
     }
 }

@@ -7,17 +7,15 @@ public class CameraTracker : MonoBehaviour
     public GameObject objTarget;
     public float Speed = 1;
 
-    // Start is called before the first frame update
     void Start()
     {
         
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //Find게임오브젝트를 사용하면 항상 모든 오브젝트중에서 필요한것을 검색하므로 느려진다.
-        //objTarget = GameObject.FindGameObjectWithTag("Player");
+        // FindGameObjectWithTag를 매 프레임 호출하면 씬 내 모든 오브젝트를 검색하므로 성능상 비효율적입니다.
+        // objTarget = GameObject.FindGameObjectWithTag("Player");
 
         if (objTarget != null)
         {

@@ -1,110 +1,124 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class SoccerBullet : Bullet
 {
-    public float damage = 20f;             // Å¸°İ µ¥¹ÌÁö[cite: 7]
-    public int maxBounceCount = 5;         // ÃÖ´ë ¹İ»ç È½¼ö[cite: 7]
-    public float lifeTime = 5.0f;          // ÃÖ´ë »ıÁ¸ ½Ã°£[cite: 7]
-    public float rotateSpeed = 360f;       // Ãà±¸°ø È¸Àü ¿¬Ãâ ¼Óµµ[cite: 7]
+    public float damage = 20f;             // íƒ€ê²© ë°ë¯¸ì§€
+    public int maxBounceCount = 5;         // ìµœëŒ€ ë°˜ì‚¬ íšŸìˆ˜
+    public float lifeTime = 5.0f;          // ìµœëŒ€ ìƒì¡´ ì‹œê°„
+    public float rotateSpeed = 360f;       // ì¶•êµ¬ê³µ íšŒì „ ê°ì†ë„
 
-    [Header("µğ¹ö±× ½Ã°¢È­ ¼³Á¤")]
-    public float debugRayDuration = 1.5f;  // µğ¹ö±× ·¹ÀÌ À¯Áö ½Ã°£ (ÃÊ)
-    public float rayLength = 2.0f;         // ±âÁî¸ğ/·¹ÀÌ È­»ìÇ¥ ±æ·®
+    [Header("ë””ë²„ê·¸ ì‹œê°í™” ì„¤ì •")]
+    public float debugRayDuration = 1.5f;  // ë ˆì´ í‘œì‹œ ì§€ì† ì‹œê°„ (ì´ˆ)
+    public float rayLength = 2.0f;         // ì…ì‚¬/ë°˜ì‚¬ í™”ì‚´í‘œ ê¸¸ì´
 
     private int currentBounceCount = 0; 
-    private Rigidbody2D rb; 
-    private Vector2 lastVelocity;          // ¹°¸® Ãæµ¹ Á÷Àü ¼Óµµ ÀúÀå¿ë
+    private Vector2 lastVelocity;          // ì§ì „ ì¶©ëŒ ì „ ì†ë„ ì €ì¥
 
-    // Gizmos ±âÄ¡¿ë º¯¼ö
+    // Gizmos ë””ë²„ê·¸ìš© í•„ë“œ
     private Vector2 debugHitPoint;
     private Vector2 debugNormalVector;
     private Vector2 debugReflectVector;
     private bool showGizmos = false;
 
-    private void Awake()
+    public override void Init(Vector2 direction, Player master, float customSpeed = -1f)
     {
-        rb = GetComponent<Rigidbody2D>(); 
-    }
-
-    private void Start()
-    {
-        Debug.Log($"[SoccerBullet] Ãà±¸°ø »ı¼ºµÊ | À§Ä¡: {transform.position}"); 
+        base.Init(direction, master, customSpeed);
+        currentBounceCount = 0;
         Destroy(gameObject, lifeTime);
+        Debug.Log($"[SoccerBullet] ì¶•êµ¬ê³µ ë°œì‚¬ ì´ˆê¸°í™” ì™„ë£Œ | ìœ„ì¹˜: {transform.position}");
     }
 
-    private void Update()
+    protected override void Start()
     {
-        // ³¯¾Æ°¡´Â µ¿¾È È¸Àü ¿¬Ãâ
-        transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime); 
-        
-        // ¸Å ÇÁ·¹ÀÓ Ãæµ¹ Á÷Àü ¼Óµµ ±â·Ï
-        lastVelocity = rb.linearVelocity;
+        base.Start();
+        if (lifeTime > 0f)
+        {
+            Destroy(gameObject, lifeTime);
+        }
     }
 
+    protected override void Update()
+    {
+        // ë¹„í–‰ ì¤‘ íšŒì „ íš¨ê³¼
+        transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
 
-    //private void OnTriggerEnter2D(Collider2D collision)
+        // ë§¤ í”„ë ˆì„ ì§ì „ ì†ë„ ê¸°ë¡
+        if (rb != null)
+        {
+            lastVelocity = rb.linearVelocity;
+        }
+
+        base.Update();
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         currentBounceCount++;
-        
-        // 1. Ãæµ¹ ÁöÁ¡ ¹× ¹ı¼± º¤ÅÍ(Normal) ÃßÃâ
+
+        // 1. ì¶©ëŒ ì ‘ì  ë° ì¶©ëŒ í‘œë©´ ë²•ì„ (Normal) ì¶”ì¶œ
         ContactPoint2D contact = collision.contacts[0];
         debugHitPoint = contact.point;
         debugNormalVector = contact.normal;
 
-        // 2. ÀÔ»ç°¢ ±â¹İ ¹İ»ç º¤ÅÍ °è»ê
+        // 2. ì…ì‚¬ê°ì— ë”°ë¥¸ ë°˜ì‚¬ ë²¡í„° ê³„ì‚°
         debugReflectVector = Vector2.Reflect(lastVelocity.normalized, debugNormalVector);
 
-        // 3. ¹İ»ç ¼Óµµ Àû¿ë
-        float speed = lastVelocity.magnitude;
-        rb.linearVelocity = debugReflectVector * speed;
+        // 3. ë°˜ì‚¬ ì†ë„ ì ìš©
+        float currentSpeed = lastVelocity.magnitude > 0.1f ? lastVelocity.magnitude : this.speed;
+        if (rb != null)
+        {
+            rb.linearVelocity = debugReflectVector * currentSpeed;
+        }
 
-        // Gizmos È°¼ºÈ­ Flag
         showGizmos = true;
 
-        // 4. [Game View µğ¹ö±ë] Debug.DrawLineÀ¸·Î ·¹ÀÌ ·»´õ¸µ
-        // - ÆÄ¶õ»ö: ÀÔ»ç º¤ÅÍ (µé¾î¿À´Â ¹æÇâ)
-        // - »¡°£»ö: ¹ı¼± º¤ÅÍ (³ë¸»)
-        // - ÃÊ·Ï»ö: ¹İ»ç º¤ÅÍ (Æ¢¾î³ª°¡´Â ¹æÇâ)
+        // ë””ë²„ê·¸ ë ˆì´ ë“œë¡œìš°
+        // - íŒŒë€ìƒ‰: ì…ì‚¬ì„  (ë‚ ì•„ì˜¨ ë°©í–¥)
+        // - ë¹¨ê°„ìƒ‰: ë²•ì„  (í‘œë©´ ìˆ˜ì§ì„ )
+        // - ì´ˆë¡ìƒ‰: ë°˜ì‚¬ì„  (íŠ•ê²¨ë‚˜ê°ˆ ë°©í–¥)
         Debug.DrawLine(debugHitPoint - (lastVelocity.normalized * rayLength), debugHitPoint, Color.blue, debugRayDuration);
         Debug.DrawLine(debugHitPoint, debugHitPoint + (debugNormalVector * rayLength), Color.red, debugRayDuration);
         Debug.DrawLine(debugHitPoint, debugHitPoint + (debugReflectVector * rayLength), Color.green, debugRayDuration);
 
-        // »ó¼¼ ·Î±× Ãâ·Â
+        // ë¡œê·¸ ì¶œë ¥
         Debug.Log($"<color=yellow>[SoccerBullet Bounce]</color> " +
-                  $"Ãæµ¹ ´ë»ó: {collision.gameObject.name} | " +
-                  $"Ãæµ¹ ÁöÁ¡: {debugHitPoint} | " +
-                  $"¹ı¼±(Normal): {debugNormalVector} | " +
-                  $"¹İ»ç(Reflect): {debugReflectVector}");
+                  $"ì¶©ëŒ ëŒ€ìƒ: {collision.gameObject.name} | " +
+                  $"ì¶©ëŒ ìœ„ì¹˜: {debugHitPoint} | " +
+                  $"ë²•ì„ (Normal): {debugNormalVector} | " +
+                  $"ë°˜ì‚¬(Reflect): {debugReflectVector}");
 
-        // ¸ó½ºÅÍ µ¥¹ÌÁö Å¸°İ
+        // ëª¬ìŠ¤í„° ì¶©ëŒ ì‹œ ë°ë¯¸ì§€ ì²˜ë¦¬
         if (collision.gameObject.CompareTag("Monster"))
         {
-            Debug.Log($"[SoccerBullet] ¸ó½ºÅÍ µ¥¹ÌÁö Å¸°İ! | ´ë»ó: {collision.gameObject.name} | µ¥¹ÌÁö: {damage}");
-            // collision.gameObject.GetComponent<Enemy>()?.TakeDamage(damage, master);[cite: 7]
+            Player target = collision.gameObject.GetComponent<Player>();
+            if (target != null)
+            {
+                OnHitMonster(target);
+            }
         }
 
+        // ìµœëŒ€ ë°”ìš´ìŠ¤ íšŸìˆ˜ ë„ë‹¬ ì‹œ íŒŒê´´
         if (currentBounceCount >= maxBounceCount)
         {
-            Debug.Log("[SoccerBullet] ÃÖ´ë ¹İ»ç È½¼ö µµ´Ş·Î ÀÎÇÑ ÆÄ±«");
+            Debug.Log("[SoccerBullet] ìµœëŒ€ ë°˜ì‚¬ íšŸìˆ˜ ë„ë‹¬ë¡œ ì¸í•œ íŒŒê´´");
             Destroy(gameObject);
         }
     }
 
-    // [Scene View µğ¹ö±ë] ±âÁî¸ğ¸¦ ÀÌ¿ëÇÑ ¼öÄ¡ ¹× ¹æÇâ ½Ã°¢È­
+    // ì—ë””í„° ì”¬ ë·° ì‹œê°í™”
     private void OnDrawGizmos()
     {
         if (!showGizmos) return;
 
-        // 1. Ãæµ¹ ÁöÁ¡ Ç¥½Ã (³ë¶õ»ö Á¡)
+        // 1. ì¶©ëŒ ì§€ì  í‘œì‹œ (ë…¸ë€ êµ¬)
         Gizmos.color = Color.yellow;
         Gizmos.DrawSphere(debugHitPoint, 0.15f);
 
-        // 2. ¹ı¼± º¤ÅÍ Ç¥½Ã (»¡°£»ö ¼± - Ãæµ¹¸é Á÷°¢ ¹æÇâ)
+        // 2. ë²•ì„  ë²¡í„° í‘œì‹œ (ë¹¨ê°„ ì„ )
         Gizmos.color = Color.red;
         Gizmos.DrawLine(debugHitPoint, debugHitPoint + (debugNormalVector * rayLength));
 
-        // 3. ¹İ»ç º¤ÅÍ Ç¥½Ã (ÃÊ·Ï»ö ¼± - Æ¨°Ü³ª°¡´Â ¹æÇâ)
+        // 3. ë°˜ì‚¬ê° ë²¡í„° í‘œì‹œ (ì´ˆë¡ ì„ )
         Gizmos.color = Color.green;
         Gizmos.DrawLine(debugHitPoint, debugHitPoint + (debugReflectVector * rayLength));
     }

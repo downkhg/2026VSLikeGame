@@ -10,20 +10,20 @@ public class GUIInventory : MonoBehaviour
 
     public void SetInventory(MonsterInventory monsterInventory)
     {
-        //버튼의 프리팹을 로드한다.
+        // 버튼 프리팹을 로드한다.
         GameObject prefabsButton = Resources.Load("GUI/IventoryButton") as GameObject;
-        //로드한 버튼을 동적생성하고, 버튼을 인벤토리에 저장된 정보에 맞게 설정하고, 리스트에 추가한다.
+        
+        // 로드한 버튼을 동적 생성하고, 인벤토리에 저장된 정보에 맞게 설정한 뒤 리스트에 추가한다.
         foreach (var monster in monsterInventory.listMonsters)
         {
-            GameObject objButton =
-                Instantiate(prefabsButton, gridLayoutGroupContent.transform);
-            GUIIventoryButton guiIventoryButon =
-                objButton.GetComponent<GUIIventoryButton>();
+            GameObject objButton = Instantiate(prefabsButton, gridLayoutGroupContent.transform);
+            GUIIventoryButton guiIventoryButon = objButton.GetComponent<GUIIventoryButton>();
             guiIventoryButon.Set(monster);
             Debug.Log("GUIIventoryButton:" + monster);
             listGuiIventoryButtons.Add(guiIventoryButon);
         }
-        //리스트에 추가한 인벤토리라인수에 맞춰서 컨텐츠영역의 크기를 조절한다.
+
+        // 추가된 인벤토리 개수와 행/열에 맞춰 컨텐츠 영역의 크기를 조절한다.
         int size = monsterInventory.listMonsters.Count;
         Vector2 vCellSize = gridLayoutGroupContent.cellSize;
         RectTransform rectTransformContent = gridLayoutGroupContent.GetComponent<RectTransform>();
@@ -39,7 +39,10 @@ public class GUIInventory : MonoBehaviour
     {
         foreach (var button in listGuiIventoryButtons)
         {
-            //Destroy(button.gameObject);
+            if (button != null)
+            {
+                Destroy(button.gameObject);
+            }
         }
         listGuiIventoryButtons.Clear();
     }

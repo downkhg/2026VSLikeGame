@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class TotalGun : MonoBehaviour
 {
@@ -41,7 +41,7 @@ public class TotalGun : MonoBehaviour
         SetGunType(currentGunType);
     }
 
-    // 1. 캡슐화: 외부에서 무기 타입을 안전하게 변경하는 메서드
+    // 1. 외부에서 무기 타입을 안전하게 변경하는 메서드
     public void SetGunType(GunType newGunType)
     {
         currentGunType = newGunType;
@@ -62,7 +62,7 @@ public class TotalGun : MonoBehaviour
         Shot(defaultDir);
     }
 
-    // 2-2. 방향(Vector3) 지정 발사 (전방, 후방, 이동 방향 등 자유 지정 가능)
+    // 2-2. 방향(Vector3) 지정 발사
     public void Shot(Vector3 dir)
     {
         switch (currentGunType)
@@ -96,7 +96,7 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 3. 은닉성: 외부로 노출되지 않는 내부 컴포넌트 자동 탐색 로직
+    // 3. 내부 컴포넌트 자동 탐색 로직
     private void InitGunComponents()
     {
         if (gun == null) gun = GetComponent<Gun>();
@@ -108,7 +108,7 @@ public class TotalGun : MonoBehaviour
         if (lightningShield == null) lightningShield = GetComponent<LightningShield>();
     }
 
-    // 4. 은닉성: Enum 조건에 따라 선택된 무기 스크립트만 enabled 상태를 켬
+    // 4. 선택된 무기 스크립트만 enabled 상태를 켬
     private void UpdateActiveGunState()
     {
         if (gun != null) gun.enabled = (currentGunType == GunType.DefaultGun);

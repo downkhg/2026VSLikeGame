@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -49,36 +49,21 @@ public class KunaiGun : MonoBehaviour
         Vector2 dir = (target.position - transform.position).normalized;
 
         GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-        Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
         Bullet bullet = copyBullet.GetComponent<Bullet>();
 
         if (bullet != null)
         {
-            bullet.master = master;
+            bullet.Init(dir, master, ShotPower);
         }
         else
         {
             Debug.LogWarning("[KunaiGun] 생성된 쿠나이 프리팹에 'Bullet' 컴포넌트가 없습니다.");
         }
 
-        if (rigidbody != null)
-        {
-            rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
-            Debug.Log("[KunaiGun] 생성된 쿠나이 프리팹에 'rigidbody' 컴포넌트가 있습니다.");
-        }
-        else
-        {
-            Debug.LogWarning("[KunaiGun] 생성된 쿠나이 프리팹에 'Rigidbody2D' 컴포넌트가 없습니다.");
-        }
-
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        copyBullet.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
         // [로그] 생성된 프리팹(쿠나이)의 정보 상세 출력
         Debug.Log($"[KunaiGun] 쿠나이 발사 완료! " +
                   $"| 오브젝트 이름: {copyBullet.name} " +
                   $"| 생성 위치: {copyBullet.transform.position} " +
-                  $"| 회전 각도(Angle): {angle:F2}° " +
                   $"| 발사 방향(Dir): {dir} " +
                   $"| 샷 파워: {ShotPower}");
 
@@ -110,28 +95,14 @@ public class KunaiGun : MonoBehaviour
         Debug.Log($"[KunaiGun] Shot Start (방향 벡터 기반 발사) | 지정 방향: {dir}");
 
         GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-        Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
         Bullet bullet = copyBullet.GetComponent<Bullet>();
 
         if (bullet != null)
         {
-            bullet.master = master;
+            bullet.Init(dir, master, ShotPower);
         }
 
-        if (rigidbody != null)
-        {
-            rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
-        }
-
-        float angle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
-        copyBullet.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-        // [로그] 방향 발사 시 생성된 프리팹 정보 출력
-        Debug.Log($"[KunaiGun] (방향) 쿠나이 발사 완료! " +
-                  $"| 오브젝트 이름: {copyBullet.name} " +
-                  $"| 생성 위치: {copyBullet.transform.position} " +
-                  $"| 회전 각도(Angle): {angle:F2}°");
-
+        Debug.Log($"[KunaiGun] (방향) 쿠나이 발사 완료! | 오브젝트 이름: {copyBullet.name}");
         Debug.Log("[KunaiGun] Shot End");
     }
 

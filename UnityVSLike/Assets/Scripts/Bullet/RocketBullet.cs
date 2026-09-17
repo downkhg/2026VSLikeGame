@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public class RocketBullet : Bullet
 {
@@ -19,25 +19,49 @@ public class RocketBullet : Bullet
     public float damage = 50f;           // 데미지
     public GameObject explosionEffect;   // 폭발 이펙트 프리팹
 
-    private Rigidbody2D rb;
-
-    private void Awake()
+    protected override void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
+        base.Awake();
+        currentSpeed = initialSpeed;
     }
 
-    private void Start()
+    public override void Init(Vector2 direction, Player master, float customSpeed = -1f)
     {
-        // [로그 1] 객체 초기화 시점 위치
-        Debug.Log($"[RocketBullet] 로켓 객체 초기화 (Start) | 현재 객체 위치: {transform.position}");
-
+        this.master = master;
+        vStart = transform.position;
         currentSpeed = initialSpeed;
 
-        // 발사 시 가장 가까운 적을 타겟으로 지정
+        if (rb == null)
+        {
+            rb = GetComponent<Rigidbody2D>();
+        }
+
+        // 초기 발사 방향 정렬
+        if (direction != Vector2.zero)
+        {
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+        }
+
+        if (rb != null)
+        {
+            rb.linearVelocity = transform.right * currentSpeed;
+        }
+
         targetEnemy = FindNearestEnemy();
+        Debug.Log($"[RocketBullet] 로켓 발사 초기화 완료 | 타겟: {(targetEnemy != null ? targetEnemy.name : "없음")}");
     }
 
-    private void Update()
+    protected override void Start()
+    {
+        base.Start();
+        if (targetEnemy == null)
+        {
+            targetEnemy = FindNearestEnemy();
+        }
+    }
+
+    protected override void Update()
     {
         // 1. 속도 가속 처리 (초기 속도 -> 최대 속도)
         if (currentSpeed < maxSpeed)
@@ -46,74 +70,76 @@ public class RocketBullet : Bullet
             currentSpeed = Mathf.Min(currentSpeed, maxSpeed);
         }
 
-        // 2. 타겟이 없거나 파괴되었다면 다시 탐색
+        // 2. 타겟이 없거나 비활성화되었다면 다시 탐색
         if (targetEnemy == null || !targetEnemy.gameObject.activeInHierarchy)
         {
             targetEnemy = FindNearestEnemy();
         }
 
         // 3. 타겟을 향해 부드럽게 회전 (유도 기능)
-        if (targetEnemy != null)
+        if (rb != null)
         {
-            Vector2 direction = (Vector2)targetEnemy.position - rb.position;
-            direction.Normalize();
+            if (targetEnemy != null)
+            {
+                Vector2 direction = (Vector2)targetEnemy.position - rb.position;
+                direction.Normalize();
 
-            // 현재 바라보는 방향과 목표 방향 사이의 각도 차이 계산
-            float rotateAmount = Vector3.Cross(direction, transform.right).z;
+                // 현재 바라보는 방향과 목표 방향 사이의 각도 차이 계산
+                float rotateAmount = Vector3.Cross(direction, transform.right).z;
+                rb.angularVelocity = -rotateAmount * rotateSpeed;
+            }
+            else
+            {
+                rb.angularVelocity = 0f;
+            }
 
-            // 로켓의 회전 처리
-            rb.angularVelocity = -rotateAmount * rotateSpeed;
+            // 4. 로켓이 바라보는 전방(right) 방향으로 가속 이동
+            rb.linearVelocity = transform.right * currentSpeed;
         }
-        else
-        {
-            // 타겟이 없으면 회전 정지 (직진)
-            rb.angularVelocity = 0f;
-        }
 
-        // 4. 로켓이 바라보는 전방(right) 방향으로 가속 이동
-        rb.linearVelocity = transform.right * currentSpeed;
+        // 사거리 체크 소멸 (부모 Update 호출)
+        base.Update();
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    protected override void OnTriggerEnter2D(Collider2D collision)
     {
-        // [로그 2] 충돌 감지 로그 (충돌한 대상 정보 및 위치 출력)
         Debug.Log($"[RocketBullet] 충돌 발생! | 충돌 대상: {collision.gameObject.name} | 태그: {collision.tag} | 충돌 위치: {transform.position}");
-
-        // 몬스터나 벽에 충돌 시 폭발
-        // if (collision.CompareTag("Monster") || collision.CompareTag("Wall"))
-        {
-            Explode();
-        }
+        Explode();
     }
 
     private void Explode()
     {
-        // [로그 3] 폭발 로직 진입 로그
         Debug.Log($"[RocketBullet] Explode() 실행 | 폭발 위치: {transform.position}");
 
         // 폭발 이펙트 생성
         if (explosionEffect != null)
         {
             GameObject effectObj = Instantiate(explosionEffect, transform.position, Quaternion.identity);
-            Destroy(effectObj, 0.5f); // 이펙트는 2초 후 제거
-            // [로그 4] 폭발 이펙트 생성 성공 로그
-            Debug.Log($"[RocketBullet] 폭발 이펙트 생성 완료! | 이펙트 이름: {effectObj.name} | 생성 위치: {effectObj.transform.position}");
+            ExplosionEffect effectComp = effectObj.GetComponent<ExplosionEffect>();
+            if (effectComp != null)
+            {
+                effectComp.master = master;
+                effectComp.damage = damage;
+            }
+            Destroy(effectObj, 0.5f);
+            Debug.Log($"[RocketBullet] 폭발 이펙트 생성 완료! | 이펙트 이름: {effectObj.name}");
         }
         else
         {
-            // [경고 로그] 이펙트 프리팹이 비어있는 경우
             Debug.LogWarning("[RocketBullet] explosionEffect 프리팹이 할당되어 있지 않습니다.");
         }
 
         // 범위 내 적들에게 데미지 전달
         Collider2D[] hitMonsters = Physics2D.OverlapCircleAll(transform.position, explosionRadius, monsterLayer);
-
-        // [로그 5] 폭발 범위 내 감지된 적 개수 출력
         Debug.Log($"[RocketBullet] 폭발 범위 내 감지된 적 수: {hitMonsters.Length}개 (범위: {explosionRadius})");
 
-        foreach (var monster in hitMonsters)
+        foreach (var monsterCol in hitMonsters)
         {
-            // TODO: monster.GetComponent<Enemy>()?.TakeDamage(damage, master);
+            Player target = monsterCol.GetComponent<Player>();
+            if (target != null)
+            {
+                OnHitMonster(target);
+            }
         }
 
         Destroy(gameObject);

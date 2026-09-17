@@ -28,10 +28,10 @@ public class LightningBullet : MonoBehaviour
         Debug.Log($"[LightningBullet Lifecycle] Start: {vStart}/{gameObject.name}");
     }
 
-    // 💡 Animation Event: 애니메이션의 각 프레임마다 호출되어 범위 내 몬스터를 타격
+    // 애니메이션 이벤트: 각 프레임마다 호출되어 범위 내 몬스터를 타격
     public void DealFrameDamage()
     {
-        Debug.Log($"[LightningBullet] DealFrameDamage 1: {gameObject.name}");
+        Debug.Log($"[LightningBullet] DealFrameDamage: {gameObject.name}");
         Collider2D[] hitMonsters = Physics2D.OverlapCircleAll(transform.position, attackRadius, monsterLayer);
 
         foreach (Collider2D collision in hitMonsters)
@@ -50,15 +50,17 @@ public class LightningBullet : MonoBehaviour
  
                     if (target.Death())
                     {
-                        Debug.Log($"[LightningBullet] DealFrameDamage 3: {gameObject.name}");
-                        GameManager.GetInstacne().monsterInventory.AddMonster(target.name);
+                        if (GameManager.GetInstacne() != null && GameManager.GetInstacne().monsterInventory != null)
+                        {
+                            GameManager.GetInstacne().monsterInventory.AddMonster(target.name);
+                        }
                     }
                 }
             }
         }
     }
 
-    // 💡 Animation Event: 번개 애니메이션이 끝나는 마지막 프레임에 호출되어 오브젝트 파괴
+    // 애니메이션 이벤트: 번개 애니메이션이 끝나는 마지막 프레임에 호출되어 오브젝트 파괴
     public void OnAnimationEnd()
     {
         Debug.Log($"[LightningBullet] Animation Ended: {gameObject.name}");
