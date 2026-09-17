@@ -291,7 +291,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 34439232}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 73325402cc8d96f4598f625193f43ad8, type: 3}
   m_Name: 
@@ -6659,7 +6659,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f80194aebdec14b4496e8fcaf978c933, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentGunType: 2
+  currentGunType: 4
   gun: {fileID: 779419715}
   kunaiGun: {fileID: 1169189971654905960}
   shotGun: {fileID: 6346829167769232042}

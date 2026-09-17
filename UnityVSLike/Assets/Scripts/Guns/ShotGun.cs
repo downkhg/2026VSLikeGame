@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -78,8 +78,7 @@ public class ShotGun : MonoBehaviour
     // 메인 발사 진입점
     public void Shot(Vector3 dir, Player master)
     {
-        if (master == null) return;
-        Transform target = currentTarget;
+        if (master == null || prefabBullet == null) return;
 
         UpdateTarget();
 
@@ -104,25 +103,6 @@ public class ShotGun : MonoBehaviour
             {
                 Debug.Log($"[Shotgun Action] 🔄 조준 범위를 벗어남({angleDifference:F1}°) -> 정면 발사 ({baseAngle:F1}°)");
             }
-
-            // 4. 인스턴스화 및 컴포넌트 데이터 세팅
-            GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-            copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-
-            Bullet bullet = copyBullet.GetComponent<Bullet>();
-            if (bullet != null)
-            {
-                bullet.master = master;
-                //bullet.InitBullet(dir, ShotPower);
-               
-            }
-
-            Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
-            if (rigidbody != null)
-            {
-                rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
-                copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-            }
         }
         else
         {
@@ -140,7 +120,7 @@ public class ShotGun : MonoBehaviour
         // 4. 디버그 레이 드로우
         if (showGizmos)
         {
-            Debug.DrawLine(transform.position, (Vector2)transform.position + finalDir * 5f, spreadColor, debugRayDuration);
+            Debug.DrawLine(transform.position, (Vector2)transform.position + (finalDir * 5f), spreadColor, debugRayDuration);
         }
 
         // 5. 탄환 생성 및 Rigidbody2D 물리 초기화

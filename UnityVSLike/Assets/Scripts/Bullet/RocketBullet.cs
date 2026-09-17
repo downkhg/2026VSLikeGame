@@ -103,6 +103,11 @@ public class RocketBullet : Bullet
 
     protected override void OnTriggerEnter2D(Collider2D collision)
     {
+        if (collision.CompareTag("Player") || collision.CompareTag("Bullet"))
+        {
+            Debug.Log($"[RocketBullet] 비충돌 발생! | 충돌 대상: {collision.gameObject.name} | 태그: {collision.tag} | 충돌 위치: {transform.position}");
+            return;
+        }
         Debug.Log($"[RocketBullet] 충돌 발생! | 충돌 대상: {collision.gameObject.name} | 태그: {collision.tag} | 충돌 위치: {transform.position}");
         Explode();
     }
