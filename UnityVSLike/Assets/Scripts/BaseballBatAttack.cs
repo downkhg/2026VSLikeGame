@@ -1,24 +1,24 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class BaseballBatAttack : MonoBehaviour
 {
-    [Header("°ø°İ ¹üÀ§ ¼³Á¤")]
-    [Tooltip("ÃÖ´ë °ø°İ »ç°Å¸® (rr)")]
+    [Header("ë¶€ì±„ê¼´ ê³µê²© ë²”ìœ„ ì„¤ì •")]
+    [Tooltip("ìµœëŒ€ ê³µê²© ì‚¬ê±°ë¦¬ ë°˜ê²½")]
     public float maxRadius = 5.0f;
 
-    [Tooltip("ÃÖ¼Ò °ø°İ »ç°Å¸® / ¾ÈÂÊ Á¦¿Ü ¹üÀ§ (br)")]
+    [Tooltip("ìµœì†Œ ê³µê²© ì‚¬ê±°ë¦¬ ë°˜ê²½")]
     public float minRadius = 1.0f;
 
-    [Tooltip("ºÎÃ¤²Ã ÀüÃ¼ °¢µµ (deg)")]
+    [Tooltip("ë¶€ì±„ê¼´ ê³µê²© ê°ë„ (ë„)")]
     public float attackAngle = 90.0f;
 
-    [Header("°ø°İ ¹× ³Ë¹é ¿É¼Ç")]
+    [Header("ê³µê²© ë° í”¼ê²© ì„¤ì •")]
     public float damage = 20.0f;
     public float knockbackForce = 10.0f;
     public LayerMask targetLayer;
 
-    [Header("ÈÖµÎ¸£±â ¿É¼Ç")]
-    public float swingSpeed = 360.0f; // degrees per second
+    [Header("ìŠ¤ìœ™ ì†ë„ ì„¤ì •")]
+    public float swingSpeed = 360.0f; // ì´ˆë‹¹ íšŒì „ ê°ë„
 
     public Player master;
     public GameObject objTarget;
@@ -27,23 +27,24 @@ public class BaseballBatAttack : MonoBehaviour
 
     private void Awake()
     {
-        batSwing.Init(swingSpeed, attackAngle);
+        if (batSwing != null)
+        {
+            batSwing.Init(swingSpeed, attackAngle);
+        }
     }
 
     private void FixedUpdate()
     {
         Vector3 vPos = transform.position;
-        Collider2D[] colliders =  Physics2D.OverlapCircleAll(vPos, maxRadius, targetLayer);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(vPos, maxRadius, targetLayer);
 
-        foreach(Collider2D collider in colliders)
+        foreach (Collider2D collider in colliders)
         {
             objTarget = collider.gameObject;
             break;
         }
     }
 
-
-    //public float fDist; //µğ¹ö±ëÀ» ÇÒ¶§ ÀÓ½Ã·Î »ç¿ë
     public float fAngle;
     void AttackProcess()
     {
@@ -54,7 +55,6 @@ public class BaseballBatAttack : MonoBehaviour
             Vector3 vDist = vTargetPos - vPos;
             float fDist = vDist.magnitude;
             float fHalf = attackAngle * 0.5f;
-
 
             if (fDist > maxRadius)
             {
@@ -83,10 +83,8 @@ public class BaseballBatAttack : MonoBehaviour
                     return;
                 }
             }
-            
         }
     }
-
 
     public float maxTime = 0.5f;
     public float currentTime = 0.0f;
@@ -107,7 +105,7 @@ public class BaseballBatAttack : MonoBehaviour
         UpdateTime();
     }
 
-    // ¿¡µğÅÍ ¾À ºä »ó½Ã/¼±ÅÃ ½Ã visualizer (ºÎÃ¤²Ã ¹× ÃÖ¼Ò/ÃÖ´ë »ç°Å¸® ±×¸®±â)
+    // ì—ë””í„° ì”¬ ë·° ì‹œê°í™” (ê³µê²© ë²”ìœ„ ë° ë¶€ì±„ê¼´ ì˜ì—­ í‘œì‹œ)
     private void OnDrawGizmosSelected()
     {
         float fHalf = attackAngle * 0.5f;
@@ -129,17 +127,17 @@ public class BaseballBatAttack : MonoBehaviour
         vLineEnd = position + vLeft * maxRadius;
         Gizmos.DrawLine(position, vLineEnd);
 
-        // ÃÖ´ë »ç°Å¸® (rr)
+        // ìµœëŒ€ ê³µê²© ë°˜ê²½
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(position, maxRadius);
 
-        // ÃÖ¼Ò »ç°Å¸® (br) 
+        // ìµœì†Œ ê³µê²© ë°˜ê²½
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(position, minRadius);
 
-        // ºÎÃ¤²Ã ÁÂ¿ì °æ°è¼± - ÆÄ¶õ»ö ¼±
-        Vector3 leftBoundary = Quaternion.Euler(0, -attackAngle / 2.0f, 0) * transform.right;
-        Vector3 rightBoundary = Quaternion.Euler(0, attackAngle / 2.0f, 0) * transform.right;
+        // ë¶€ì±„ê¼´ ì¢Œìš° ê²½ê³„ì„ 
+        Vector3 leftBoundary = Quaternion.Euler(0, 0, fHalf) * transform.right;
+        Vector3 rightBoundary = Quaternion.Euler(0, 0, -fHalf) * transform.right;
 
         Gizmos.color = new Color(0, 0, 1);
         Gizmos.DrawRay(position + leftBoundary * minRadius, leftBoundary * (maxRadius - minRadius));

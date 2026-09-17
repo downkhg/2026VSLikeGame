@@ -1,23 +1,22 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class BlockGun : MonoBehaviour
 {
     public GameObject prefabBlockBullet;
-    public float shotSpeed = 12f;       // ±âº» ¹ß»ç ¼Óµµ (´ë»óÀÌ ¾øÀ» ¶§ »ç¿ë)
-    public float maxDistance = 6f;       // ³«ÇÏÇÏ±â Àü±îÁö ÀÌµ¿ÇÒ °Å¸®
+    public float shotSpeed = 12f;
+    public float maxDistance = 6f;
 
-    public LayerMask monsterLayer; // ÀÎ½ºÆåÅÍ¿¡¼­ ¸ó½ºÅÍ ·¹ÀÌ¾î¸¦ ÁöÁ¤ÇØÁà¾ß ÇÕ´Ï´Ù.
-    public float range = 8f;       // Å½»ö ¹üÀ§
+    public LayerMask monsterLayer;
+    public float range = 8f;
 
-    [Header("Cooltime Settings")]
-    public float attackInterval = 2.0f; // ÄðÅ¸ÀÓ (ÃÊ ´ÜÀ§)
-    private float lastShotTime = 0f;    // ¸¶Áö¸· ¹ß»ç ½Ã°¢
+    [Header("ì¿¨íƒ€ìž„ ì„¤ì •")]
+    public float attackInterval = 2.0f;
+    private float lastShotTime = 0f;
 
     private Player ownerPlayer;
-
-    Vector2 targetPos;
+    private Vector2 targetPos;
 
     private void Awake()
     {
@@ -37,7 +36,6 @@ public class BlockGun : MonoBehaviour
     {
         if (prefabBlockBullet == null) return;
 
-        // ¹ß»ç ´ë»ó(°¡Àå °¡±î¿î ¸ó½ºÅÍ) °Ë»ö
         Transform targetTransform = GetNearestMonsterTransform();
 
         GameObject copyBullet = Instantiate(prefabBlockBullet, transform.position, Quaternion.identity);
@@ -45,28 +43,24 @@ public class BlockGun : MonoBehaviour
 
         if (blockBullet == null) return;
 
-        blockBullet.master = ownerPlayer;
-
-        // ÈûÀ» °¡ÇÒ ¿ÀÇÁ¼Â À§Ä¡ (º®µ¹ È¸ÀüÀ» À¯µµÇÏ±â À§ÇØ Áß½Éº¸´Ù ¾à°£ À§/¿·)
         Vector3 forceOffsetPosition = transform.position + new Vector3(0.1f, 0.1f, 0f);
 
         if (targetTransform != null)
         {
-            // 1. ´ë»óÀÌ ÀÖÀ» ¶§: Æ÷¹°¼±(¿ªÅºµµ) ¼Óµµ °è»ê ÈÄ ¹ß»ç
             targetPos = targetTransform.position;
         }
         else
         {
-            // 2. ´ë»óÀÌ ¾øÀ» ¶§: À§ÂÊÀ¸·Î ½îµÇ ¾à°£ ¾Õ(¿ìÃø)À¸·Î Ä¡¿ìÄ£ ¹æÇâ
-            targetPos = transform.position + (ownerPlayer.GetComponent<Dynamic>().dir * 1.3f + Vector3.up).normalized ;
+            Vector3 defaultDir = ownerPlayer != null && ownerPlayer.GetComponent<Dynamic>() != null
+                ? ownerPlayer.GetComponent<Dynamic>().dir
+                : Vector3.right;
+            targetPos = transform.position + (defaultDir * 1.3f + Vector3.up).normalized;
         }
 
-        Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, 45f); // 45µµ Åõ»ç°¢ ¿¹½Ã
-
-        blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition);
+        Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, 45f);
+        blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, ownerPlayer);
     }
 
-    // °¡Àå °¡±î¿î ¸ó½ºÅÍÀÇ Transform ¹ÝÈ¯ (¾øÀ¸¸é null)
     private Transform GetNearestMonsterTransform()
     {
         Collider2D[] monsters = Physics2D.OverlapCircleAll(transform.position, range, monsterLayer);
@@ -88,25 +82,20 @@ public class BlockGun : MonoBehaviour
         return nearestMonster != null ? nearestMonster.transform : null;
     }
 
-
-
-    // ÁÖ¾îÁø ¸ñÇ¥ ÁöÁ¡(target)À¸·Î µµÂøÇÏ±â À§ÇÑ Æ÷¹°¼± ÃÊ±â ¼Óµµ¸¦ °è»êÇÏ´Â ÇÔ¼ö
     private Vector2 CalculateBallisticVelocity(Vector2 startPos, Vector2 targetPos, float angleDeg)
     {
         float angleRad = angleDeg * Mathf.Deg2Rad;
-        float gravity = Mathf.Abs(Physics2D.gravity.y) ; // BlockBulletÀÇ gravityScale(2.5) Àû¿ë°ª
+        float gravity = Mathf.Abs(Physics2D.gravity.y);
 
         float dirX = targetPos.x - startPos.x;
         float dirY = targetPos.y - startPos.y;
         float distHorizontal = Mathf.Abs(dirX);
 
-        // ³ôÀÌÂ÷¿Í °Å¸®¸¦ ±â¹ÝÀ¸·Î ¼Óµµ(v) °è»ê
         float vSquare = (gravity * distHorizontal * distHorizontal) / 
                         (2 * (distHorizontal * Mathf.Tan(angleRad) - dirY) * Mathf.Pow(Mathf.Cos(angleRad), 2));
 
         if (vSquare <= 0 || float.IsNaN(vSquare))
         {
-            // °è»ê ºÒ°¡ÇÑ °¡±õ°Å³ª Æ¯¼öÇÑ À§Ä¡ÀÏ °æ¿ì ±âº» ¹æÇâ ¹ÝÈ¯
             return (targetPos - startPos).normalized * shotSpeed;
         }
 

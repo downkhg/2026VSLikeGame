@@ -1,12 +1,11 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class ShotGun : MonoBehaviour
 {
     public GameObject prefabBullet;
-    public float ShotPower;
+    public float ShotPower = 10f;
     public float searchRadius = 10f; // 적을 탐색할 최대 반경
 
     [Header("샷건 전용 설정")]
@@ -29,18 +28,38 @@ public class ShotGun : MonoBehaviour
 
     public float angleDifference;
 
+    private void Awake()
+    {
+        if (master == null)
+        {
+            master = GetComponentInParent<Player>();
+        }
+    }
+
     void Update()
     {
         fireTimer += Time.deltaTime;
 
+        // 매 프레임 타겟 유효성 검사 및 탐색
+        UpdateTarget();
+
         if (fireTimer >= fireInterval)
         {
+            Shot(GetPlayerFacingDirection(), master);
             fireTimer = 0f;
-            //Shot(master);
         }
     }
 
-    // 플레이어 또는 무기의 '실제 바라보는 방향 Vector2' 추출
+    // 타겟 갱신 메서드
+    private void UpdateTarget()
+    {
+        if (!IsTargetValid(currentTarget))
+        {
+            currentTarget = FindNearestEnemy();
+        }
+    }
+
+    // 플레이어 또는 무기의 실제 바라보는 방향 Vector2 추출
     private Vector2 GetPlayerFacingDirection()
     {
         if (master != null && master.transform.localScale.x < 0)
@@ -56,132 +75,64 @@ public class ShotGun : MonoBehaviour
         return Vector2.right;
     }
 
-    // 1. 타겟 유지 로직이 적용된 메인 발사 진입점
+    // 메인 발사 진입점
     public void Shot(Vector3 dir, Player master)
     {
-        if (master == null) return;
-        Transform target = currentTarget;
-
-        // 플레이어 정면 방향 및 월드 기준 각도 (0~360도)
-        if (target != null)
+        if (master == null || prefabBullet == null)
         {
-            // 별도 함수 분리 없이 인라인 처리
-            // 1. 퍼짐 오프셋 연산
-            float halfSpread = spreadAngle / 2f;
-            float randomOffset = Random.Range(-halfSpread, halfSpread);
-            float baseAngle = Vector2.SignedAngle(dir, dir);
-            float finalAngle = baseAngle + randomOffset;
+            Debug.Log($"[Shotgun Action] 🎯 주인이나 프리펩이 셋팅 되지않았습니다!");
+            return;
+        }
 
-            // 2. 삼각함수로 이동 방향 계산
-            float rad = finalAngle * Mathf.Deg2Rad;
+        UpdateTarget();
 
-            Vector3 targetDist = target.position - transform.position;
+        // 1. 기본 발사 기준 각도 (바라보는 방향)
+        float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+
+        // 2. 타겟이 존재하고 정면 부채꼴 범위 내에 있는지 확인
+        if (currentTarget != null)
+        {
+            Vector3 targetDist = currentTarget.position - transform.position;
             Vector2 targetDir = targetDist.normalized;
 
             angleDifference = Vector2.Angle(dir, targetDir);
 
-            // 사이각이 spreadAngle 절반 이하인 경우 적 위치 조준 발사
+            // 사이각이 spreadAngle 절반 이하인 경우 적 위치를 기준으로 조준
             if (angleDifference <= spreadAngle / 2f)
             {
-                baseAngle = Vector2.SignedAngle(Vector2.right, targetDir);
-                dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-
-                Debug.Log($"[Shotgun Action] 🎯 적 조준 발사 (기준 각도: {baseAngle:F1}°)");
-            }
-            else if(angleDifference >= 90)
-            {
-                Debug.Log($"[Shotgun Action] 🔄 조준 범위를 벗어남({angleDifference:F1}°) -> 플레이어 방향으로 발사 ({baseAngle:F1}°)");
+                baseAngle = Mathf.Atan2(targetDir.y, targetDir.x) * Mathf.Rad2Deg;
+                Debug.Log($"[Shotgun Action] 🎯 적 조준 발사 (기준 각도: {baseAngle:F1}°, 사이각: {angleDifference:F1}°)");
             }
             else
             {
-                Debug.Log($"[Shotgun Action] 🔄 조준 범위를 벗어남({angleDifference:F1}°) -> 정면 발사 ({baseAngle:F1}°)");
-            }
-
-            // 4. 인스턴스화 및 컴포넌트 데이터 세팅
-            GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-            copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-
-            Bullet bullet = copyBullet.GetComponent<Bullet>();
-            if (bullet != null)
-            {
-                bullet.master = master;
-                //bullet.InitBullet(dir, ShotPower);
-               
-            }
-
-            Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
-            if (rigidbody != null)
-            {
-                rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
-                copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
+                Debug.Log($"[Shotgun Action] 🔄 타겟이 조준 범위를 벗어남({angleDifference:F1}°) -> 정면 기준 발사 ({baseAngle:F1}°)");
             }
         }
         else
         {
-            Debug.Log($"[Shotgun Check] 타겟 없음 -> 무기 정면 방향 기준 발사");
-
-            // 4. 인스턴스화 및 컴포넌트 데이터 세팅
-            GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-            //copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-
-            Bullet bullet = copyBullet.GetComponent<Bullet>();
-            f//loat randomOffset = Random.Range(-halfSpread, halfSpread);
-            if (bullet != null)
-            {
-                bullet.master = master;
-                //bullet.InitBullet(dir, ShotPower);
-            }
-
-            Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
-            if (rigidbody != null)
-            {
-                rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
-                //copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-            }
+            Debug.Log($"[Shotgun Check] 타겟 없음 -> 정면 기준 발사 ({baseAngle:F1}°)");
         }
 
-      
-        // 3. 디버그 레이 드로우
-        if (showGizmos)
-        {
-           //Debug.DrawLine(transform.position, transform.position + dir * 5f, spreadColor, debugRayDuration);
-        }
-
-       
-    }
-
-    // 탄환 생성 및 물리 처리를 담당하는 단일 실행 블록
-    private void ExecuteBulletFiring(float baseAngle, Player master)
-    {
-        // 1. 퍼짐 오프셋 연산
+        // 3. 조준 여부와 상관없이 항상 부채꼴(spreadAngle) 범위 내에서 랜덤 분산 각도 적용
         float halfSpread = spreadAngle / 2f;
         float randomOffset = Random.Range(-halfSpread, halfSpread);
         float finalAngle = baseAngle + randomOffset;
 
-        // 2. 삼각함수로 이동 방향 계산
         float rad = finalAngle * Mathf.Deg2Rad;
-        Vector2 dir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
+        Vector2 finalDir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
 
-        // 3. 디버그 레이 드로우
+        // 4. 디버그 레이 드로우
         if (showGizmos)
         {
-            Debug.DrawLine(transform.position, (Vector2)transform.position + dir * 5f, spreadColor, debugRayDuration);
+            Debug.DrawLine(transform.position, (Vector2)transform.position + finalDir * 5f, spreadColor, debugRayDuration);
         }
 
-        // 4. 인스턴스화 및 컴포넌트 데이터 세팅
+        // 5. 탄환 생성 및 Rigidbody2D 물리 초기화
         GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
-        copyBullet.transform.rotation = Quaternion.AngleAxis(finalAngle, Vector3.forward);
-
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.master = master;
-        }
-
-        Rigidbody2D rigidbody = copyBullet.GetComponent<Rigidbody2D>();
-        if (rigidbody != null)
-        {
-            rigidbody.AddForce(dir * ShotPower, ForceMode2D.Impulse);
+            bullet.Init(finalDir, master, ShotPower);
         }
     }
 
@@ -220,18 +171,18 @@ public class ShotGun : MonoBehaviour
 
         Vector3 currentPos = transform.position;
 
-        // 1. 탐색 범위
+        // 1. 탐색 범위 (초록 원)
         Gizmos.color = searchColor;
         Gizmos.DrawWireSphere(currentPos, searchRadius);
 
-        // 2. 타겟 연결선
+        // 2. 타겟 연결선 (노란 선)
         if (currentTarget != null)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(currentPos, currentTarget.position);
         }
 
-        // 3. 부채꼴 드로우
+        // 3. 부채꼴 드로우 (빨간 선)
         Gizmos.color = spreadColor;
         Vector2 playerDir = GetPlayerFacingDirection();
         float baseAngle = Vector2.SignedAngle(Vector2.right, playerDir);

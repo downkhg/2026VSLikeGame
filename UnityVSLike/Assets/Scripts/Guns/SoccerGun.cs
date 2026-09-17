@@ -1,13 +1,13 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class SoccerGun : MonoBehaviour
 {
-    public GameObject prefabSoccerBullet; // Ãà±¸°ø ÇÁ¸®ÆÕ
-    public float shotPower = 12f;          // ¹ß»ç Èû
-    public float searchRadius = 10f;       // Àû Å½»ö ¹İ°æ
+    public GameObject prefabSoccerBullet;
+    public float shotPower = 12f;
+    public float searchRadius = 10f;
 
-    [Header("¹ß»ç ¼³Á¤")]
-    public float fireInterval = 2.0f;     // ¹ß»ç ÁÖ±â (ÃÊ ´ÜÀ§)
+    [Header("ë°œì‚¬ ì„¤ì •")]
+    public float fireInterval = 2.0f;
     private float fireTimer = 0f;
 
     public Player master;
@@ -36,27 +36,19 @@ public class SoccerGun : MonoBehaviour
     {
         if (prefabSoccerBullet == null) return;
 
-        Debug.Log($"[SoccerGun] Ãà±¸°ø ¹ß»ç ½Ãµµ | ¹ß»ç À§Ä¡: {transform.position}");
+        Debug.Log($"[SoccerGun] ì¶•êµ¬ê³µ ë°œì‚¬ ì‹œë„ | ë°œì‚¬ ìœ„ì¹˜: {transform.position}");
 
         Transform target = FindNearestEnemy();
         Vector2 dir = target != null ? (target.position - transform.position).normalized : (Vector2)transform.right;
 
         GameObject soccerObj = Instantiate(prefabSoccerBullet, transform.position, Quaternion.identity);
-
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
         if (bullet != null)
         {
-            bullet.master = master;
+            bullet.Init(dir, master, shotPower);
         }
 
-        Rigidbody2D rb = soccerObj.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            // ÃÊ±â ¹ß»ç Èû Àü´Ş
-            rb.AddForce(dir * shotPower, ForceMode2D.Impulse);
-        }
-
-        Debug.Log($"[SoccerGun] Ãà±¸°ø »ı¼º ¿Ï·á | ¹æÇâ: {dir}");
+        Debug.Log($"[SoccerGun] ì¶•êµ¬ê³µ ë°œì‚¬ ì™„ë£Œ | ë°©í–¥: {dir}");
     }
 
     private Transform FindNearestEnemy()

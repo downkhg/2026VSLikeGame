@@ -11,14 +11,12 @@ public class LightningShield : MonoBehaviour
     [SerializeField] private GameObject lightningBulletPrefab;
 
     [Header("Shield Settings")]
-    [SerializeField] private float detectionRadius = 5f;  // 감지 범위
+    [SerializeField] private float detectionRadius = 5f;  // 감지 반경
     [SerializeField] private float strikeInterval = 1.5f; // 낙뢰 주기
     [SerializeField] private int maxTargetsPerStrike = 3; // 최대 타깃 수
     [SerializeField] private LayerMask enemyLayer;       // 몬스터 레이어
-
     private float timer;
     private List<Transform> currentTargets = new List<Transform>(); // Gizmo 표시용 타겟 리스트
-
     private void Awake()
     {
         // 동일 오브젝트에 Player 스크립트가 있다면 자동으로 master 할당
@@ -71,7 +69,7 @@ public class LightningShield : MonoBehaviour
             LightningBullet bullet = copyBullet.GetComponent<LightningBullet>();
             if (bullet != null)
             {
-                bullet.master = this.master; //[cite: 3]
+                bullet.master = this.master;
             }
         }
     }

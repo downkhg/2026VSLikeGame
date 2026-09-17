@@ -1,23 +1,25 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 
 public class ExplosionEffect : MonoBehaviour
 {
     public float damage = 50f;
-    public Player master; // ÇÊ¿ä ½Ã µ¥¹ÌÁö ÁÖÃ¼ Àü´Ş¿ë
+    public Player master; // í•„ìš” ì‹œ ë°ë¯¸ì§€ ì „ë‹¬ì„ ìœ„í•œ ê³µê²©ì í”Œë ˆì´ì–´ ì°¸ì¡°
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // ¸ó½ºÅÍ ·¹ÀÌ¾î³ª ÅÂ±× ÆÇº°
+        // ëª¬ìŠ¤í„° ë ˆì´ì–´ ë° íƒœê·¸ ì‹ë³„
         if (collision.CompareTag("Monster"))
         {
-            Debug.Log($"[ExplosionEffect] ¸ó½ºÅÍ Æø¹ß ¹üÀ§ °¨Áö! | ´ë»ó: {collision.name} | µ¥¹ÌÁö: {damage}");
-
-            // ¸ó½ºÅÍ Ã¼·Â ½ºÅ©¸³Æ®¿¡ µ¥¹ÌÁö Àü´Ş
-            // collision.GetComponent<Enemy>()?.TakeDamage(damage, master);
+            Debug.Log($"[ExplosionEffect] í­ë°œ ë²”ìœ„ í”¼ê²© ê°ì§€! | ëŒ€ìƒ: {collision.name} | ë°ë¯¸ì§€: {damage}");
+            Player target = collision.GetComponent<Player>();
+            if (target != null && master != null)
+            {
+                master.Attack(target);
+            }
         }
     }
 
-    // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³ª°Å³ª ÀÏÁ¤ ½Ã°£ÀÌ Áö³ª¸é ÀÚµ¿À¸·Î ÆÄ±«µÇµµ·Ï ¿¬µ¿
+    // ì• ë‹ˆë©”ì´ì…˜ ì´ë²¤íŠ¸ ë˜ëŠ” ìˆ˜ëª… ë§Œë£Œ ì‹œ ìë™ íŒŒê´´
     public void DestroySelf()
     {
         Destroy(gameObject);

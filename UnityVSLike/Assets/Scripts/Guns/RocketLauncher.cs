@@ -1,19 +1,19 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class RocketLauncher : MonoBehaviour
 {
-    public GameObject prefabRocketBullet; // ¹ß»çÇÒ ·ÎÄÏ Åõ»çÃ¼ ÇÁ¸®ÆÕ
-    public float launchForce = 15f;        // ·ÎÄÏ ¹ß»ç ¼Óµµ/Èû
-    public float searchRadius = 10f;       // Àû Å½»ö ¹üÁÖ
+    public GameObject prefabRocketBullet;
+    public float launchForce = 15f;
+    public float searchRadius = 10f;
 
-    [Header("¹ß»ç ¼³Á¤")]
-    public float fireInterval = 1.5f;     // ¹ß»ç °£°İ (ÄğÅ¸ÀÓ)
+    [Header("ë°œì‚¬ ì„¤ì •")]
+    public float fireInterval = 1.5f;
     private float fireTimer = 0f;
 
-    public Player master;                 // ¹ß»ç ÁÖÃ¼ (ÇÃ·¹ÀÌ¾î)
-    public LayerMask monsterLayer;        // ¸ó½ºÅÍ ·¹ÀÌ¾î
+    public Player master;
+    public LayerMask monsterLayer;
 
     private void Awake()
     {
@@ -38,9 +38,8 @@ public class RocketLauncher : MonoBehaviour
     {
         if (prefabRocketBullet == null) return;
 
-        // [·Î±× 1] ¹ß»ç ½Ãµµ ¹× ¹ß»ç À§Ä¡(¹«±â À§Ä¡) Ãâ·Â
         Vector3 launchPosition = transform.position;
-        Debug.Log($"[RocketLauncher] ¹ß»ç ½Ãµµ | ¹ß»ç À§Ä¡: {launchPosition}");
+        Debug.Log($"[RocketLauncher] ë°œì‚¬ ì‹œë„ | ë°œì‚¬ ìœ„ì¹˜: {launchPosition}");
 
         Transform nearestEnemy = FindNearestEnemy();
         Vector2 launchDir;
@@ -51,36 +50,20 @@ public class RocketLauncher : MonoBehaviour
         }
         else
         {
-            // ÀûÀÌ ¾øÀ¸¸é Àü¹æ ¹æÇâÀ¸·Î ¹ß»ç
             launchDir = transform.right;
         }
 
-        // ·ÎÄÏ ÇÁ¸®ÆÕ »ı¼º
         GameObject rocketObj = Instantiate(prefabRocketBullet, launchPosition, Quaternion.identity);
 
-        // [·Î±× 2] °´Ã¼ »ı¼º Á÷ÈÄ À§Ä¡ Ãâ·Â
-        Debug.Log($"[RocketLauncher] ·ÎÄÏ °´Ã¼ »ı¼º ¿Ï·á | »ı¼ºµÈ °´Ã¼: {rocketObj.name} | »ı¼º À§Ä¡: {rocketObj.transform.position}");
-
-        // È¸Àü Ã³¸® (¹ß»ç ¹æÇâÀ¸·Î ¸Ó¸® µ¹¸®±â)
-        float angle = Mathf.Atan2(launchDir.y, launchDir.x) * Mathf.Rad2Deg;
-        rocketObj.transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
-
-        // Rigidbody2D ¹× RocketBullet ÄÄÆ÷³ÍÆ® Àü´Ş
-        Rigidbody2D rb = rocketObj.GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.AddForce(launchDir * launchForce, ForceMode2D.Impulse);
-        }
-
-        // Åõ»çÃ¼¿¡ master(ÇÃ·¹ÀÌ¾î) Àü´Ş
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();
         if (bulletScript != null)
         {
-            bulletScript.master = master;
+            bulletScript.Init(launchDir, master, launchForce);
         }
+
+        Debug.Log($"[RocketLauncher] ë¡œì¼“ ë°œì‚¬ ì™„ë£Œ | ìœ„ì¹˜: {launchPosition} | ë°©í–¥: {launchDir}");
     }
 
-    // °¡Àå °¡±î¿î Àû Å½»ö ÇÔ¼ö
     private Transform FindNearestEnemy()
     {
         Collider2D[] monsters = Physics2D.OverlapCircleAll(transform.position, searchRadius, monsterLayer);
