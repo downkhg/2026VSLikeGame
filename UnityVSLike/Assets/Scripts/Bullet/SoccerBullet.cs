@@ -7,12 +7,16 @@ public class SoccerBullet : Bullet
     public float lifeTime = 5.0f;          // 최대 생존 시간
     public float rotateSpeed = 360f;       // 축구공 회전 각속도
 
+    [Header("충돌 및 위치 보정 설정")]
+    public float bulletRadius = 0.2f;      // 축구공 반지름 (벽 내부 갇힘 방지용)
+    public float skinWidth = 0.05f;        // 추가 보정 여유값
+
     [Header("디버그 시각화 설정")]
     public float debugRayDuration = 1.5f;  // 레이 표시 지속 시간 (초)
     public float rayLength = 2.0f;         // 입사/반사 화살표 길이
 
-    private int currentBounceCount = 0; 
-    private Vector2 lastVelocity;          // 직전 충돌 전 속도 저장
+    private int currentBounceCount = 0;
+    private Vector2 lastVelocity;          // 충돌 직전 정상 물리 속도 저장
 
     // Gizmos 디버그용 필드
     private Vector2 debugHitPoint;
@@ -24,6 +28,13 @@ public class SoccerBullet : Bullet
     {
         base.Init(direction, master, customSpeed);
         currentBounceCount = 0;
+
+        // [수정 1] Continuous 설정으로 고속 이동 시 터널링(벽 뚫기) 방지
+        if (rb != null)
+        {
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
+
         Destroy(gameObject, lifeTime);
         Debug.Log($"[SoccerBullet] 축구공 발사 초기화 완료 | 위치: {transform.position}");
     }
@@ -31,6 +42,12 @@ public class SoccerBullet : Bullet
     protected override void Start()
     {
         base.Start();
+
+        if (rb != null)
+        {
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        }
+
         if (lifeTime > 0f)
         {
             Destroy(gameObject, lifeTime);
@@ -42,13 +59,17 @@ public class SoccerBullet : Bullet
         // 비행 중 회전 효과
         transform.Rotate(0f, 0f, rotateSpeed * Time.deltaTime);
 
-        // 매 프레임 직전 속도 기록
-        if (rb != null)
+        base.Update();
+    }
+
+    private void FixedUpdate()
+    {
+        // [수정 2] 물리 연산 전의 실제 이동 속도를 안정적으로 기록
+        // (OnCollisionEnter2D 시점에 속도가 꺾이거나 0이 되는 문제 방지)
+        if (rb != null && rb.linearVelocity.sqrMagnitude > 0.01f)
         {
             lastVelocity = rb.linearVelocity;
         }
-
-        base.Update();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -60,10 +81,19 @@ public class SoccerBullet : Bullet
         debugHitPoint = contact.point;
         debugNormalVector = contact.normal;
 
-        // 2. 입사각에 따른 반사 벡터 계산
-        debugReflectVector = Vector2.Reflect(lastVelocity.normalized, debugNormalVector);
+        // 2. [수정 3 - 핵심] 벽 내부로 파고든 공의 위치를 법선 방향(벽 표면 밖)으로 즉시 강제 이동
+        Vector2 correctedPosition = contact.point + (contact.normal * (bulletRadius + skinWidth));
+        transform.position = correctedPosition;
+        if (rb != null)
+        {
+            rb.position = correctedPosition;
+        }
 
-        // 3. 반사 속도 적용
+        // 3. 입사각에 따른 반사 벡터 계산
+        Vector2 inDirection = lastVelocity.sqrMagnitude > 0.01f ? lastVelocity.normalized : transform.up;
+        debugReflectVector = Vector2.Reflect(inDirection, debugNormalVector);
+
+        // 4. 반사 속도 적용
         float currentSpeed = lastVelocity.magnitude > 0.1f ? lastVelocity.magnitude : this.speed;
         if (rb != null)
         {
@@ -73,10 +103,7 @@ public class SoccerBullet : Bullet
         showGizmos = true;
 
         // 디버그 레이 드로우
-        // - 파란색: 입사선 (날아온 방향)
-        // - 빨간색: 법선 (표면 수직선)
-        // - 초록색: 반사선 (튕겨나갈 방향)
-        Debug.DrawLine(debugHitPoint - (lastVelocity.normalized * rayLength), debugHitPoint, Color.blue, debugRayDuration);
+        Debug.DrawLine(debugHitPoint - (inDirection * rayLength), debugHitPoint, Color.blue, debugRayDuration);
         Debug.DrawLine(debugHitPoint, debugHitPoint + (debugNormalVector * rayLength), Color.red, debugRayDuration);
         Debug.DrawLine(debugHitPoint, debugHitPoint + (debugReflectVector * rayLength), Color.green, debugRayDuration);
 
