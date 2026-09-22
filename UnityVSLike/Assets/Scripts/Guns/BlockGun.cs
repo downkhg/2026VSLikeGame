@@ -11,54 +11,73 @@ public class BlockGun : MonoBehaviour
     public LayerMask monsterLayer;
     public float range = 8f;
 
+    [Header("타겟팅 및 기본 탄착점 설정")]
+    public Transform defaultTarget;
+    public Transform targetTransform = null;
+
     [Header("쿨타임 설정")]
     public float attackInterval = 2.0f;
     private float lastShotTime = 0f;
 
     private Player ownerPlayer;
-    private Vector2 targetPos;
 
     private void Awake()
     {
         ownerPlayer = GetComponentInParent<Player>();
+        if (monsterLayer == 0)
+        {
+            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+        }
+
+        if (defaultTarget == null)
+        {
+            Transform found = transform.Find("DefultTarget");
+            if (found == null) found = transform.Find("DefaultTarget");
+            if (found != null) defaultTarget = found;
+        }
     }
 
     private void Update()
     {
+        // 씬 뷰 기즈모 및 탄착점 확인을 위해 타겟 위치 실시간 갱신
+        UpdateTargetPosition();
+
         if (Time.time >= lastShotTime + attackInterval)
         {
-            Shot();
+            Shot(ownerPlayer);
             lastShotTime = Time.time;
         }
     }
 
-    public void Shot()
+    private void UpdateTargetPosition()
     {
+        targetTransform = GetNearestMonsterTransform();
+        if (targetTransform == null)
+        {
+            targetTransform = defaultTarget;
+        } 
+    }
+
+    public void Shot(Player customMaster = null)
+    {
+        if (customMaster != null) ownerPlayer = customMaster;
         if (prefabBlockBullet == null) return;
 
-        Transform targetTransform = GetNearestMonsterTransform();
+        // 발사 직전 가장 가까운 적 탐색 및 탄착점 최신화
+        UpdateTargetPosition();
 
         GameObject copyBullet = Instantiate(prefabBlockBullet, transform.position, Quaternion.identity);
         BlockBullet blockBullet = copyBullet.GetComponent<BlockBullet>();
 
         if (blockBullet == null) return;
 
+        Vector2 targetPos = targetTransform.position;
         Vector3 forceOffsetPosition = transform.position + new Vector3(0.1f, 0.1f, 0f);
+        Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, flightTime);
 
-        if (targetTransform != null)
-        {
-            targetPos = targetTransform.position;
-        }
-        else
-        {
-            Vector3 defaultDir = ownerPlayer != null && ownerPlayer.GetComponent<Dynamic>() != null
-                ? ownerPlayer.GetComponent<Dynamic>().dir
-                : Vector3.right;
-            targetPos = transform.position + (defaultDir * 1.3f + Vector3.up).normalized;
-        }
-
-        Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, 45f);
         blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, ownerPlayer);
+
+        Debug.Log($"[BlockGun] 블록 발사! 탄착 목표: {targetPos} | 계산된 초기 속도: {launchVelocity}");
     }
 
     private Transform GetNearestMonsterTransform()
@@ -71,6 +90,8 @@ public class BlockGun : MonoBehaviour
 
         foreach (var monster in monsters)
         {
+            if (monster == null || !monster.gameObject.activeInHierarchy) continue;
+
             float dist = Vector3.Distance(transform.position, monster.transform.position);
             if (dist < minDistance)
             {
@@ -82,35 +103,42 @@ public class BlockGun : MonoBehaviour
         return nearestMonster != null ? nearestMonster.transform : null;
     }
 
-    private Vector2 CalculateBallisticVelocity(Vector2 startPos, Vector2 targetPos, float angleDeg)
+    [Header("역탄도 (포물선) 설정")]
+    public float flightTime = 1.0f; // 목표 지점까지 도달하는 시간 (초)
+
+    private Vector2 CalculateBallisticVelocity(Vector2 startPos, Vector2 targetPos, float time)
     {
-        float angleRad = angleDeg * Mathf.Deg2Rad;
-        float gravity = Mathf.Abs(Physics2D.gravity.y);
+        // 강의 슬라이드 공식 적용:
+        // vDist = target - start
+        // vx = vDist.x / Time
+        // vy = H = (vDist.y / Time) + (G / 2 * Time)
+        Vector2 vDist = targetPos - startPos;
+        float gravity = Mathf.Abs(Physics2D.gravity.y); // Unity 기본 9.81f
 
-        float dirX = targetPos.x - startPos.x;
-        float dirY = targetPos.y - startPos.y;
-        float distHorizontal = Mathf.Abs(dirX);
+        if (time <= 0.05f) time = 0.05f; // 0으로 나누기 방지
 
-        float vSquare = (gravity * distHorizontal * distHorizontal) / 
-                        (2 * (distHorizontal * Mathf.Tan(angleRad) - dirY) * Mathf.Pow(Mathf.Cos(angleRad), 2));
-
-        if (vSquare <= 0 || float.IsNaN(vSquare))
-        {
-            return (targetPos - startPos).normalized * shotSpeed;
-        }
-
-        float v = Mathf.Sqrt(vSquare);
-        float vx = v * Mathf.Cos(angleRad) * Mathf.Sign(dirX);
-        float vy = v * Mathf.Sin(angleRad);
+        float vx = vDist.x / time;
+        float vy = (vDist.y / time) + (0.5f * gravity * time);
 
         return new Vector2(vx, vy);
     }
 
     private void OnDrawGizmos()
     {
+        // 1. 탐색 범위 (빨간 원)
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, range);
+
+        if (targetTransform == null) return;
+        Vector2 targetPos = targetTransform.position;
+        // 2. 탄착점 표시 (노란 구 및 십자선)
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(targetPos, 0.3f);
+        Gizmos.DrawWireSphere(targetPos, 0.35f);
+        Gizmos.DrawLine(targetPos + Vector2.left * 0.5f, targetPos + Vector2.right * 0.5f);
+        Gizmos.DrawLine(targetPos + Vector2.down * 0.5f, targetPos + Vector2.up * 0.5f);
+
+        // 3. 발사 위치 -> 탄착점 조준선 (초록 선)
+        Gizmos.color = Color.green;
+        Gizmos.DrawLine(transform.position, targetPos);
     }
 }

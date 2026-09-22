@@ -42,6 +42,9 @@ public class BlockBullet : Bullet
         {
             rb.linearVelocity = velocity;
         }
+
+        // 역탄도 탄환의 최대 수명 설정 (도달 후 잔여 시간 경과 시 소멸)
+        Destroy(gameObject, destroyDelay);
     }
 
     // 2. 직진 비행 후 낙하 모드 초기화
@@ -72,6 +75,17 @@ public class BlockBullet : Bullet
     public override void Init(Vector2 direction, Player master, float customSpeed = -1f)
     {
         InitBulletWithDirection(direction, customSpeed > 0 ? customSpeed : speed, maxDistance, master);
+    }
+
+    protected override void Update()
+    {
+        // 역탄도 모드(isBallisticMode)일 때는 곡선 호를 그리므로 단순 직선 거리(fDist >= maxDistance)로 파괴하지 않음
+        if (isBallisticMode)
+        {
+            return;
+        }
+
+        base.Update();
     }
 
     void FixedUpdate()

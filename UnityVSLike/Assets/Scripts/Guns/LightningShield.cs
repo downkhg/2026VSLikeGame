@@ -19,10 +19,15 @@ public class LightningShield : MonoBehaviour
     private List<Transform> currentTargets = new List<Transform>(); // Gizmo 표시용 타겟 리스트
     private void Awake()
     {
-        // 동일 오브젝트에 Player 스크립트가 있다면 자동으로 master 할당
+        // 동일 오브젝트 또는 부모에 Player 스크립트가 있다면 자동으로 master 할당
         if (master == null)
         {
-            master = GetComponent<Player>();
+            master = GetComponentInParent<Player>();
+        }
+
+        if (enemyLayer == 0)
+        {
+            enemyLayer = 1 << LayerMask.NameToLayer("Monster");
         }
     }
 
@@ -54,8 +59,11 @@ public class LightningShield : MonoBehaviour
         }
     }
 
-    private void Shot()
+    public void Shot(Player customMaster = null)
     {
+        if (customMaster != null) master = customMaster;
+        UpdateTargets();
+
         if (lightningBulletPrefab == null || currentTargets.Count == 0) return;
 
         foreach (Transform target in currentTargets)

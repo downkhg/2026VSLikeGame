@@ -21,6 +21,11 @@ public class RocketLauncher : MonoBehaviour
         {
             master = GetComponentInParent<Player>();
         }
+
+        if (monsterLayer == 0)
+        {
+            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+        }
     }
 
     private void Update()
@@ -31,6 +36,20 @@ public class RocketLauncher : MonoBehaviour
         {
             fireTimer = 0f;
             Shot(master);
+        }
+    }
+
+    public void Shot(Vector3 dir, Player master)
+    {
+        if (prefabRocketBullet == null) return;
+
+        Vector3 launchPosition = transform.position;
+        GameObject rocketObj = Instantiate(prefabRocketBullet, launchPosition, Quaternion.identity);
+
+        Bullet bulletScript = rocketObj.GetComponent<Bullet>();
+        if (bulletScript != null)
+        {
+            bulletScript.Init(dir, master, launchForce);
         }
     }
 

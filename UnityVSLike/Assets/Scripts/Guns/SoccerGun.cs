@@ -19,6 +19,11 @@ public class SoccerGun : MonoBehaviour
         {
             master = GetComponentInParent<Player>();
         }
+
+        if (monsterLayer == 0)
+        {
+            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+        }
     }
 
     private void Update()
@@ -29,6 +34,18 @@ public class SoccerGun : MonoBehaviour
         {
             fireTimer = 0f;
             Shot(master);
+        }
+    }
+
+    public void Shot(Vector3 dir, Player master)
+    {
+        if (prefabSoccerBullet == null) return;
+
+        GameObject soccerObj = Instantiate(prefabSoccerBullet, transform.position, Quaternion.identity);
+        SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
+        if (bullet != null)
+        {
+            bullet.Init(dir, master, shotPower);
         }
     }
 

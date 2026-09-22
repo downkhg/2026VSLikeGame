@@ -72,7 +72,7 @@ public class TotalGun : MonoBehaviour
                 break;
 
             case GunType.KunaiGun:
-                if (kunaiGun != null) kunaiGun.Shot(master);
+                if (kunaiGun != null) kunaiGun.Shot(dir, master);
                 break;
 
             case GunType.ShotGun:
@@ -80,43 +80,71 @@ public class TotalGun : MonoBehaviour
                 break;
 
             case GunType.RocketLauncher:
-                if (rocketLauncher != null) rocketLauncher.Shot(master);
+                if (rocketLauncher != null) rocketLauncher.Shot(dir, master);
                 break;
 
             case GunType.SoccerGun:
-                if (soccerGun != null) soccerGun.Shot(master);
+                if (soccerGun != null) soccerGun.Shot(dir, master);
                 break;
 
             case GunType.BlockGun:
-                if (blockGun != null) blockGun.Shot();
+                if (blockGun != null) blockGun.Shot(master);
                 break;
 
             case GunType.LightningShield:
+                if (lightningShield != null) lightningShield.Shot(master);
                 break;
         }
     }
 
-    // 3. 내부 컴포넌트 자동 탐색 로직
-    private void InitGunComponents()
+    private void Update()
     {
-        if (gun == null) gun = GetComponent<Gun>();
-        if (kunaiGun == null) kunaiGun = GetComponent<KunaiGun>();
-        if (shotGun == null) shotGun = GetComponent<ShotGun>();
-        if (rocketLauncher == null) rocketLauncher = GetComponent<RocketLauncher>();
-        if (soccerGun == null) soccerGun = GetComponent<SoccerGun>();
-        if (blockGun == null) blockGun = GetComponent<BlockGun>();
-        if (lightningShield == null) lightningShield = GetComponent<LightningShield>();
+        // 디버그/테스트 편의를 위한 숫자키 1~7 무기 실시간 변경
+        if (Input.GetKeyDown(KeyCode.Alpha1)) SetGunType(GunType.DefaultGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) SetGunType(GunType.KunaiGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) SetGunType(GunType.ShotGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) SetGunType(GunType.RocketLauncher);
+        else if (Input.GetKeyDown(KeyCode.Alpha5)) SetGunType(GunType.SoccerGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha6)) SetGunType(GunType.BlockGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha7)) SetGunType(GunType.LightningShield);
     }
 
-    // 4. 선택된 무기 스크립트만 enabled 상태를 켬
+    // 3. 내부 컴포넌트 자동 탐색 로직 (비활성화된 자식 GameObject도 포함 탐색)
+    private void InitGunComponents()
+    {
+        if (gun == null) gun = GetComponentInChildren<Gun>(true);
+        if (kunaiGun == null) kunaiGun = GetComponentInChildren<KunaiGun>(true);
+        if (shotGun == null) shotGun = GetComponentInChildren<ShotGun>(true);
+        if (rocketLauncher == null) rocketLauncher = GetComponentInChildren<RocketLauncher>(true);
+        if (soccerGun == null) soccerGun = GetComponentInChildren<SoccerGun>(true);
+        if (blockGun == null) blockGun = GetComponentInChildren<BlockGun>(true);
+        if (lightningShield == null) lightningShield = GetComponentInChildren<LightningShield>(true);
+    }
+
+    // 4. 선택된 무기 GameObject 및 컴포넌트 활성화/비활성화 처리
     private void UpdateActiveGunState()
     {
-        if (gun != null) gun.enabled = (currentGunType == GunType.DefaultGun);
-        if (kunaiGun != null) kunaiGun.enabled = (currentGunType == GunType.KunaiGun);
-        if (shotGun != null) shotGun.enabled = (currentGunType == GunType.ShotGun);
-        if (rocketLauncher != null) rocketLauncher.enabled = (currentGunType == GunType.RocketLauncher);
-        if (soccerGun != null) soccerGun.enabled = (currentGunType == GunType.SoccerGun);
-        if (blockGun != null) blockGun.enabled = (currentGunType == GunType.BlockGun);
-        if (lightningShield != null) lightningShield.enabled = (currentGunType == GunType.LightningShield);
+        SetGunActive(gun, currentGunType == GunType.DefaultGun);
+        SetGunActive(kunaiGun, currentGunType == GunType.KunaiGun);
+        SetGunActive(shotGun, currentGunType == GunType.ShotGun);
+        SetGunActive(rocketLauncher, currentGunType == GunType.RocketLauncher);
+        SetGunActive(soccerGun, currentGunType == GunType.SoccerGun);
+        SetGunActive(blockGun, currentGunType == GunType.BlockGun);
+        SetGunActive(lightningShield, currentGunType == GunType.LightningShield);
+
+        Debug.Log($"[TotalGun] 활성 무기 변경 -> {currentGunType}");
+    }
+
+    private void SetGunActive(MonoBehaviour gunComp, bool isActive)
+    {
+        if (gunComp != null)
+        {
+            // 부모인 TotalGun 오브젝트 자체가 아니라 자식 GameObject일 경우 GameObject 자체를 활성화/비활성화
+            if (gunComp.gameObject != this.gameObject)
+            {
+                gunComp.gameObject.SetActive(isActive);
+            }
+            gunComp.enabled = isActive;
+        }
     }
 }

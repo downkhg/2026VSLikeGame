@@ -12,6 +12,14 @@ public class Dynamic : MonoBehaviour
     public TotalGun gun;
     public Vector3 dir = Vector3.right;
 
+    private void Awake()
+    {
+        if (gun == null)
+        {
+            gun = GetComponentInChildren<TotalGun>();
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -52,7 +60,10 @@ public class Dynamic : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.X))
         {
-            gun.Shot(dir);
+            if (gun != null)
+            {
+                gun.Shot(dir);
+            }
         }
 
         if (transform.position.y < -4)
