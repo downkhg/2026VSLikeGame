@@ -61,7 +61,9 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.77f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
+    <Compile Include="Assets\Scripts\ItemInfoManager.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
     <Compile Include="Assets\Scripts\Bullet\RocketBullet.cs" />
     <Compile Include="Assets\Scripts\Bullet\SoccerBullet.cs" />
@@ -78,6 +80,7 @@
     <Compile Include="Assets\Scripts\GUI\GUIPlayerInfo.cs" />
     <Compile Include="Assets\Scripts\Dynamic.cs" />
     <Compile Include="Assets\Scripts\Guns\RocketLauncher.cs" />
+    <Compile Include="Assets\Scripts\GunInventory.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIIventoryButton.cs" />
     <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />

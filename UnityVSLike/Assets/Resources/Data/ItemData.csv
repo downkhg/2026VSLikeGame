@@ -1,0 +1,8 @@
+ID,Name,Description,GunType,Score,PrefabPath
+101,기본 권총,기본적인 탄환을 발사하는 권총으로 변경합니다.,DefaultGun,50,Prefabs/Items/Item_DefaultGun
+102,쿠나이 건,빠르게 연사되는 닌자 쿠나이로 변경합니다.,KunaiGun,100,Prefabs/Items/Item_KunaiGun
+103,샷건,넓은 부채꼴 모양으로 산탄을 발사하는 샷건으로 변경합니다.,ShotGun,150,Prefabs/Items/Item_ShotGun
+104,로켓 런처,폭발 범위 피해를 입히는 로켓 발사기로 변경합니다.,RocketLauncher,200,Prefabs/Items/Item_RocketLauncher
+105,축구공 발사기,지형과 벽에 튕겨다니는 축구공 무기로 변경합니다.,SoccerGun,150,Prefabs/Items/Item_SoccerGun
+106,블록 건,포물선 궤적으로 떨어지는 무거운 벽돌 무기로 변경합니다.,BlockGun,150,Prefabs/Items/Item_BlockGun
+107,라이트닝 쉴드,플레이어 주변에 번개 보호막을 형성하여 적을 공격합니다.,LightningShield,250,Prefabs/Items/Item_LightningShield
