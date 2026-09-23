@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -14,6 +14,10 @@ public class LightningBullet : MonoBehaviour
 
     private void Awake()
     {
+        if (monsterLayer == 0)
+        {
+            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+        }
         Debug.Log($"[LightningBullet Lifecycle] Awake: {gameObject.name}");
     }
 

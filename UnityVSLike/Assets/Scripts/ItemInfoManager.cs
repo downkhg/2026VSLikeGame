@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 교육 및 학습용: 해시맵(Dictionary) 최적화를 제거하고 단순 List를 기반으로 enum 동기화 및 조회를 수행하는 ItemInfoManager
+/// </summary>
 public class ItemInfoManager : MonoBehaviour
 {
     private static ItemInfoManager _instance;
@@ -23,12 +26,8 @@ public class ItemInfoManager : MonoBehaviour
         }
     }
 
-    [Header("로드된 아이템 정보 목록 (인스펙터 확인용)")]
+    [Header("단순 리스트로 관리되는 아이템 정보 목록")]
     [SerializeField] private List<ItemInfo> itemInfoList = new List<ItemInfo>();
-
-    // 빠른 검색을 위한 Dictionary (ID 및 GunType 기준)
-    private Dictionary<int, ItemInfo> itemDictById = new Dictionary<int, ItemInfo>();
-    private Dictionary<TotalGun.GunType, ItemInfo> itemDictByGunType = new Dictionary<TotalGun.GunType, ItemInfo>();
 
     private void Awake()
     {
@@ -41,12 +40,12 @@ public class ItemInfoManager : MonoBehaviour
         _instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // 시작 시 CSV 파일로부터 아이템 데이터 자동 로드
+        // 시작 시 CSV 파일로부터 아이템 데이터 로드
         LoadItemDataFromCSV();
     }
 
     /// <summary>
-    /// Resources/Data/ItemData.csv 파일을 읽어와 아이템 목록을 구성합니다.
+    /// Resources/Data/ItemData.csv 파일을 읽어와 단순 리스트(itemInfoList)에 추가합니다.
     /// </summary>
     public void LoadItemDataFromCSV(string resourcePath = "Data/ItemData")
     {
@@ -100,57 +99,54 @@ public class ItemInfoManager : MonoBehaviour
             AddItemInfo(info);
         }
 
-        Debug.Log($"[ItemInfoManager] CSV 로드 완료: 총 {itemInfoList.Count}개의 아이템 정보 등록됨.");
+        Debug.Log($"[ItemInfoManager] CSV 로드 완료: 총 {itemInfoList.Count}개의 아이템 정보가 리스트에 등록됨.");
     }
 
     /// <summary>
-    /// 새로운 아이템 정보를 목록에 등록합니다.
+    /// 새로운 아이템 정보를 단순 리스트에 추가합니다.
     /// </summary>
     public void AddItemInfo(ItemInfo info)
     {
         if (info == null) return;
-
         itemInfoList.Add(info);
-
-        if (!itemDictById.ContainsKey(info.ID))
-        {
-            itemDictById.Add(info.ID, info);
-        }
-
-        if (!itemDictByGunType.ContainsKey(info.GunType))
-        {
-            itemDictByGunType.Add(info.GunType, info);
-        }
     }
 
     /// <summary>
-    /// ID로 아이템 정보를 가져옵니다.
+    /// ID를 기준으로 단순 리스트를 순회하여 아이템 정보를 가져옵니다.
     /// </summary>
     public ItemInfo GetItemInfo(int id)
     {
-        if (itemDictById.TryGetValue(id, out ItemInfo info))
+        for (int i = 0; i < itemInfoList.Count; i++)
         {
-            return info;
+            if (itemInfoList[i].ID == id)
+            {
+                return itemInfoList[i];
+            }
         }
+
         Debug.LogWarning($"[ItemInfoManager] ID {id} 에 해당하는 아이템 정보가 없습니다.");
         return null;
     }
 
     /// <summary>
-    /// GunType으로 아이템 정보를 가져옵니다.
+    /// GunType enum 값을 기준으로 단순 리스트를 순회하여 아이템 정보를 가져옵니다 (enum 기반 동기화).
     /// </summary>
     public ItemInfo GetItemInfo(TotalGun.GunType gunType)
     {
-        if (itemDictByGunType.TryGetValue(gunType, out ItemInfo info))
+        for (int i = 0; i < itemInfoList.Count; i++)
         {
-            return info;
+            if (itemInfoList[i].GunType == gunType)
+            {
+                return itemInfoList[i];
+            }
         }
+
         Debug.LogWarning($"[ItemInfoManager] GunType {gunType} 에 해당하는 아이템 정보가 없습니다.");
         return null;
     }
 
     /// <summary>
-    /// 등록된 전체 아이템 목록을 반환합니다.
+    /// 등록된 전체 아이템 목록(리스트)을 반환합니다.
     /// </summary>
     public List<ItemInfo> GetAllItemInfos()
     {
@@ -158,14 +154,13 @@ public class ItemInfoManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 등록된 아이템 목록 중 중복 없이 count개를 무작위로 선택하여 반환합니다.
+    /// 등록된 단순 리스트에서 count개를 무작위로 선택하여 반환합니다 (레벨업 선택창용).
     /// </summary>
     public List<ItemInfo> GetRandomItemInfos(int count = 3)
     {
         List<ItemInfo> result = new List<ItemInfo>();
         if (itemInfoList == null || itemInfoList.Count == 0)
         {
-            // 혹시 아직 로드되지 않은 경우 로드 시도
             LoadItemDataFromCSV();
             if (itemInfoList.Count == 0) return result;
         }
@@ -184,12 +179,10 @@ public class ItemInfoManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 등록된 모든 아이템 정보를 제거/초기화합니다.
+    /// 리스트를 초기화합니다.
     /// </summary>
     public void ClearAll()
     {
         itemInfoList.Clear();
-        itemDictById.Clear();
-        itemDictByGunType.Clear();
     }
 }

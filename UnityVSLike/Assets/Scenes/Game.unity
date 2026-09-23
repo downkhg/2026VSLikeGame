@@ -527,6 +527,31 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 292493034}
     m_Modifications:
+    - target: {fileID: 1158623477338958298, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
+        type: 3}
+      propertyPath: firePoint
+      value: 
+      objectReference: {fileID: 292493034}
+    - target: {fileID: 1158623477338958298, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
+        type: 3}
+      propertyPath: fireTimer
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1158623477338958298, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
+        type: 3}
+      propertyPath: shotPower
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1158623477338958298, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
+        type: 3}
+      propertyPath: currentGunType
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1158623477338958298, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
+        type: 3}
+      propertyPath: monsterLayer.m_Bits
+      value: 576
+      objectReference: {fileID: 0}
     - target: {fileID: 5400667974738274883, guid: c58a8f23b7d9c9a49b5b81a60e38e295,
         type: 3}
       propertyPath: m_Name
@@ -583,7 +608,13 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 3583367416070365328, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
+    - {fileID: 576240937086615743, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
+    - {fileID: 1541727445244027765, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
+    - {fileID: 4145252546735802571, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
+    - {fileID: 2062840986722078415, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
+    - {fileID: 2054255628335774593, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c58a8f23b7d9c9a49b5b81a60e38e295, type: 3}
@@ -1462,8 +1493,8 @@ Transform:
   m_GameObject: {fileID: 292493033}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2.2865312, y: 2.2865312, z: 2.2865312}
+  m_LocalPosition: {x: 0.152, y: 0.038, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1529338583}
@@ -3742,7 +3773,7 @@ MonoBehaviour:
   atk: 10
   hpMax: 0
   Lv: 0
-  gunInventory: {fileID: 0}
+  gunInventory: {fileID: 1854333783646683292}
 --- !u!1 &1057214968
 GameObject:
   m_ObjectHideFlags: 0
@@ -7537,6 +7568,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1854333783646683290}
   - component: {fileID: 1854333783646683291}
+  - component: {fileID: 1854333783646683292}
   m_Layer: 0
   m_Name: GunDumy
   m_TagString: Untagged
@@ -7616,6 +7648,22 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &1854333783646683292
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1854333783646683288}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 619742f7b9f4e814297dbcf97b10b863, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 0}
+  equippedGuns: []
+  gunObjects: []
+  isLevelUpSelecting: 0
 --- !u!1001 &2357413485910923055
 PrefabInstance:
   m_ObjectHideFlags: 0
