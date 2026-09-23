@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +8,9 @@ public class ShotGun : MonoBehaviour
     public float ShotPower = 10f;
     public float searchRadius = 10f; // 적을 탐색할 최대 반경
 
+    [Header("총구 (FirePoint) 위치")]
+    public Transform firePoint;
+
     [Header("샷건 전용 설정")]
     public float spreadAngle = 30f;  // 탄환이 퍼질 수 있는 총 각도 범위 (예: 30도)
 
@@ -16,6 +19,11 @@ public class ShotGun : MonoBehaviour
     [SerializeField] private float fireTimer = 0f;
 
     public Player master;
+
+    public Vector3 GetSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position;
+    }
 
     [Header("타겟팅 설정")]
     [SerializeField] private Transform currentTarget; // 현재 유효한 타겟 저장
@@ -118,13 +126,14 @@ public class ShotGun : MonoBehaviour
         Vector2 finalDir = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
 
         // 4. 디버그 레이 드로우
+        Vector3 spawnPos = GetSpawnPosition();
         if (showGizmos)
         {
-            Debug.DrawLine(transform.position, (Vector2)transform.position + (finalDir * 5f), spreadColor, debugRayDuration);
+            Debug.DrawLine(spawnPos, (Vector2)spawnPos + (finalDir * 5f), spreadColor, debugRayDuration);
         }
 
         // 5. 탄환 생성 및 Rigidbody2D 물리 초기화
-        GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
+        GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,11 +8,19 @@ public class KunaiGun : MonoBehaviour
     public float ShotPower;
     public float searchRadius = 10f; // 적을 탐색할 최대 반경
 
+    [Header("총구 (FirePoint) 위치")]
+    public Transform firePoint;
+
     [Header("발사 설정")]
     public float fireInterval = 0.5f; // 발사 주사 간격 (초 단위)
     private float fireTimer = 0f;     // 타이머용 변수
 
     public Player master; // 플레이어 참조 (인스펙터에서 할당하거나 코드로 가져옴)
+
+    public Vector3 GetSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position;
+    }
 
     void Update()
     {
@@ -46,9 +54,10 @@ public class KunaiGun : MonoBehaviour
         // [로그] 타겟 탐색 성공 정보
         Debug.Log($"[KunaiGun] 타겟 발견! 타겟 이름: {target.name}, 타겟 위치: {target.position}");
 
-        Vector2 dir = (target.position - transform.position).normalized;
+        Vector3 spawnPos = GetSpawnPosition();
+        Vector2 dir = (target.position - spawnPos).normalized;
 
-        GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
+        GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
 
         if (bullet != null)
@@ -94,7 +103,8 @@ public class KunaiGun : MonoBehaviour
     {
         Debug.Log($"[KunaiGun] Shot Start (방향 벡터 기반 발사) | 지정 방향: {dir}");
 
-        GameObject copyBullet = Instantiate(prefabBullet, transform.position, Quaternion.identity);
+        Vector3 spawnPos = GetSpawnPosition();
+        GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
 
         if (bullet != null)

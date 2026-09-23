@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,12 +8,20 @@ public class RocketLauncher : MonoBehaviour
     public float launchForce = 15f;
     public float searchRadius = 10f;
 
+    [Header("총구 (FirePoint) 위치")]
+    public Transform firePoint;
+
     [Header("발사 설정")]
     public float fireInterval = 1.5f;
     private float fireTimer = 0f;
 
     public Player master;
     public LayerMask monsterLayer;
+
+    public Vector3 GetSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position;
+    }
 
     private void Awake()
     {
@@ -43,7 +51,7 @@ public class RocketLauncher : MonoBehaviour
     {
         if (prefabRocketBullet == null) return;
 
-        Vector3 launchPosition = transform.position;
+        Vector3 launchPosition = GetSpawnPosition();
         GameObject rocketObj = Instantiate(prefabRocketBullet, launchPosition, Quaternion.identity);
 
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();
@@ -57,7 +65,7 @@ public class RocketLauncher : MonoBehaviour
     {
         if (prefabRocketBullet == null) return;
 
-        Vector3 launchPosition = transform.position;
+        Vector3 launchPosition = GetSpawnPosition();
         Debug.Log($"[RocketLauncher] 발사 시도 | 발사 위치: {launchPosition}");
 
         Transform nearestEnemy = FindNearestEnemy();

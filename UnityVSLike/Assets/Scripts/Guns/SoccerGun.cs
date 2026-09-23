@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class SoccerGun : MonoBehaviour
 {
@@ -6,12 +6,20 @@ public class SoccerGun : MonoBehaviour
     public float shotPower = 12f;
     public float searchRadius = 10f;
 
+    [Header("총구 (FirePoint) 위치")]
+    public Transform firePoint;
+
     [Header("발사 설정")]
     public float fireInterval = 2.0f;
     private float fireTimer = 0f;
 
     public Player master;
     public LayerMask monsterLayer;
+
+    public Vector3 GetSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position;
+    }
 
     private void Awake()
     {
@@ -41,7 +49,8 @@ public class SoccerGun : MonoBehaviour
     {
         if (prefabSoccerBullet == null) return;
 
-        GameObject soccerObj = Instantiate(prefabSoccerBullet, transform.position, Quaternion.identity);
+        Vector3 spawnPos = GetSpawnPosition();
+        GameObject soccerObj = Instantiate(prefabSoccerBullet, spawnPos, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
         if (bullet != null)
         {
@@ -53,10 +62,11 @@ public class SoccerGun : MonoBehaviour
     {
         if (prefabSoccerBullet == null) return;
 
-        Debug.Log($"[SoccerGun] 축구공 발사 시도 | 발사 위치: {transform.position}");
+        Vector3 spawnPos = GetSpawnPosition();
+        Debug.Log($"[SoccerGun] 축구공 발사 시도 | 발사 위치: {spawnPos}");
 
         Transform target = FindNearestEnemy();
-        Vector2 dir = target != null ? (target.position - transform.position).normalized : (Vector2)transform.right;
+        Vector2 dir = target != null ? (target.position - spawnPos).normalized : (Vector2)transform.right;
 
         GameObject soccerObj = Instantiate(prefabSoccerBullet, transform.position, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();

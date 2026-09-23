@@ -12,6 +12,10 @@ public class BlockGun : MonoBehaviour
     public float range = 8f;
 
     [Header("타겟팅 및 기본 탄착점 설정")]
+    [Header("총구 (FirePoint) 위치")]
+    public Transform firePoint;
+
+    [Header("타겟팅 및 기본 탄착점 설정")]
     public Transform defaultTarget;
     public Transform targetTransform = null;
 
@@ -20,6 +24,11 @@ public class BlockGun : MonoBehaviour
     private float lastShotTime = 0f;
 
     private Player ownerPlayer;
+
+    public Vector3 GetSpawnPosition()
+    {
+        return firePoint != null ? firePoint.position : transform.position;
+    }
 
     private void Awake()
     {
@@ -66,18 +75,19 @@ public class BlockGun : MonoBehaviour
         // 발사 직전 가장 가까운 적 탐색 및 탄착점 최신화
         UpdateTargetPosition();
 
-        GameObject copyBullet = Instantiate(prefabBlockBullet, transform.position, Quaternion.identity);
+        Vector3 spawnPos = GetSpawnPosition();
+        GameObject copyBullet = Instantiate(prefabBlockBullet, spawnPos, Quaternion.identity);
         BlockBullet blockBullet = copyBullet.GetComponent<BlockBullet>();
 
         if (blockBullet == null) return;
 
         Vector2 targetPos = targetTransform.position;
-        Vector3 forceOffsetPosition = transform.position + new Vector3(0.1f, 0.1f, 0f);
-        Vector2 launchVelocity = CalculateBallisticVelocity(transform.position, targetPos, flightTime);
+        Vector3 forceOffsetPosition = spawnPos + new Vector3(0.1f, 0.1f, 0f);
+        Vector2 launchVelocity = CalculateBallisticVelocity(spawnPos, targetPos, flightTime);
 
         blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, ownerPlayer);
 
-        Debug.Log($"[BlockGun] 블록 발사! 탄착 목표: {targetPos} | 계산된 초기 속도: {launchVelocity}");
+        Debug.Log($"[BlockGun({this.gameObject.name})] 블록 발사! 발사위치: {spawnPos} | 탄착 목표: {targetPos} | 계산된 초기 속도: {launchVelocity}");
     }
 
     private Transform GetNearestMonsterTransform()
