@@ -74,7 +74,7 @@ public class GunInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// 선택한 아이템 정보를 인벤토리에 추가하고 플레이어 자식으로 총기 오브젝트를 동적 생성합니다.
+    /// 선택한 아이템 정보를 인벤토리에 추가하고 플레이어 자식으로 독립된 TotalGun 오브젝트를 동적 생성하여 무기로 관리합니다.
     /// </summary>
     public void AddGun(ItemInfo itemInfo)
     {
@@ -82,51 +82,48 @@ public class GunInventory : MonoBehaviour
 
         equippedGuns.Add(itemInfo);
 
-        // 플레이어 자식으로 총기 GameObject 생성
-        string gunName = $"Gun_{itemInfo.GunType}";
+        // 플레이어 자식으로 총기 GameObject 생성 (아이템/무기 타입명을 명시한 오브젝트명 부여)
+        int index = gunObjects.Count;
+        string gunName = $"TotalGun_{itemInfo.GunType}_{index + 1}";
         GameObject newGunObj = new GameObject(gunName);
         newGunObj.transform.SetParent(this.transform);
 
         // 총기별 위치 분산 (원형/오프셋 배치)
-        int index = gunObjects.Count;
         float angle = index * (360f / 6f) * Mathf.Deg2Rad;
         Vector3 offset = new Vector3(Mathf.Cos(angle) * 0.8f, Mathf.Sin(angle) * 0.8f, 0f);
         newGunObj.transform.localPosition = offset;
         newGunObj.transform.localRotation = Quaternion.identity;
 
-        // 프리팹 또는 TotalGun 컴포넌트를 복제/부착하여 해당 무기 활성화
+        // TotalGun 컴포넌트를 부착/인스턴스화하고 해당 무기의 유한상태(State)로 진입
         AttachGunComponent(newGunObj, itemInfo.GunType);
 
         gunObjects.Add(newGunObj);
 
-        Debug.Log($"[GunInventory] 새로운 총기 추가됨: {itemInfo.Name} ({itemInfo.GunType}) | 보유 총기(실드) 수: {equippedGuns.Count}");
+        Debug.Log($"[GunInventory] 새로운 무기 추가됨: {itemInfo.Name} (오브젝트명: {gunName}) | 보유 무기(실드) 수: {equippedGuns.Count}");
     }
 
     /// <summary>
-    /// 총기 타입에 맞는 컴포넌트나 프리팹을 새 자식 오브젝트에 연결합니다.
+    /// 총기 타입에 맞는 컴포넌트나 프리팹을 새 자식 오브젝트에 연결하고 유한상태를 설정합니다.
     /// </summary>
     private void AttachGunComponent(GameObject gunObj, TotalGun.GunType gunType)
     {
-        // TotalGun 프리팹이 있다면 로드하여 복제, 없다면 TotalGun 컴포넌트 동적 추가
         GameObject totalGunPrefab = Resources.Load<GameObject>("Prefabs/Guns/TotalGun");
+        TotalGun totalGun = null;
+
         if (totalGunPrefab != null)
         {
             GameObject instance = Instantiate(totalGunPrefab, gunObj.transform);
-            instance.name = "TotalGunInstance";
-            TotalGun totalGun = instance.GetComponent<TotalGun>();
-            if (totalGun != null)
-            {
-                totalGun.SetGunType(gunType);
-            }
+            instance.name = $"TotalGunInstance_{gunType}";
+            totalGun = instance.GetComponent<TotalGun>();
         }
         else
         {
-            // 플레이어 자체에 TotalGun이 있는 경우 해당 타입을 바로 갱신
-            TotalGun playerGun = GetComponentInChildren<TotalGun>();
-            if (playerGun != null)
-            {
-                playerGun.SetGunType(gunType);
-            }
+            totalGun = gunObj.AddComponent<TotalGun>();
+        }
+
+        if (totalGun != null)
+        {
+            totalGun.SetGunType(gunType, false);
         }
     }
 
