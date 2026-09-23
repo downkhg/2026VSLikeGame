@@ -176,6 +176,9 @@ public class TotalGun : MonoBehaviour
 
     private void HandleWeaponSwitchInput()
     {
+        // GunInventory가 부모에 있는 경우 건인벤토리의 AddGun 단축키와 충돌하지 않도록 스킵
+        if (GetComponentInParent<GunInventory>() != null) return;
+
         if (Input.GetKeyDown(KeyCode.Alpha1)) SetGunType(GunType.DefaultGun, true);
         else if (Input.GetKeyDown(KeyCode.Alpha2)) SetGunType(GunType.KunaiGun, true);
         else if (Input.GetKeyDown(KeyCode.Alpha3)) SetGunType(GunType.ShotGun, true);
