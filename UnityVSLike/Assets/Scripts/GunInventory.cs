@@ -37,8 +37,16 @@ public class GunInventory : MonoBehaviour
 
     private void Update()
     {
-        // 테스트용 단축키
-        // L 키: 레벨업 선택창 열기
+        // 1. 테스트용 숫자키 1~7: 각 기믹 무기를 건인벤토리에 즉시 추가
+        if (Input.GetKeyDown(KeyCode.Alpha1)) AddGunByType(TotalGun.GunType.DefaultGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) AddGunByType(TotalGun.GunType.KunaiGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) AddGunByType(TotalGun.GunType.ShotGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) AddGunByType(TotalGun.GunType.RocketLauncher);
+        else if (Input.GetKeyDown(KeyCode.Alpha5)) AddGunByType(TotalGun.GunType.SoccerGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha6)) AddGunByType(TotalGun.GunType.BlockGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha7)) AddGunByType(TotalGun.GunType.LightningShield);
+
+        // 2. L 키: 레벨업 선택창 열기
         if (Input.GetKeyDown(KeyCode.L))
         {
             if (!isLevelUpSelecting)
@@ -47,7 +55,7 @@ public class GunInventory : MonoBehaviour
             }
         }
 
-        // K 키: 플레이어 테스트 피격 (실드 소모 또는 HP 감소 테스트)
+        // 3. K 키: 플레이어 테스트 피격 (실드 소모 또는 HP 감소 테스트)
         if (Input.GetKeyDown(KeyCode.K))
         {
             if (player != null)
@@ -55,6 +63,19 @@ public class GunInventory : MonoBehaviour
                 player.OnDamaged(10);
             }
         }
+    }
+
+    /// <summary>
+    /// GunType enum 값을 받아 ItemInfoManager에서 정보를 찾아 건인벤토리에 추가합니다.
+    /// </summary>
+    public void AddGunByType(TotalGun.GunType gunType)
+    {
+        ItemInfo info = ItemInfoManager.Instance.GetItemInfo(gunType);
+        if (info == null)
+        {
+            info = new ItemInfo((int)gunType + 100, gunType.ToString(), $"{gunType} 무기", gunType, 100, "");
+        }
+        AddGun(info);
     }
 
     /// <summary>
@@ -170,7 +191,7 @@ public class GunInventory : MonoBehaviour
         InitStyles();
 
         // 1. 좌측 상단 HUD 표시 (보유 총기/실드 수량)
-        GUI.Box(new Rect(10, 30, 200, 50), $"🛡️ 보유 총기(실드): {equippedGuns.Count}개\n[L]: 레벨업 선택 | [K]: 피격 테스트", hudStyle);
+        GUI.Box(new Rect(10, 30, 240, 50), $"🛡️ 보유 총기(실드): {equippedGuns.Count}개\n[1~7]: 기믹 추가 | [L]: 레벨업 | [K]: 피격", hudStyle);
 
         // 2. 레벨업 선택 팝업창 표시
         if (isLevelUpSelecting && currentChoices != null && currentChoices.Count > 0)

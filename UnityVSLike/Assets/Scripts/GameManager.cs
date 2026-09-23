@@ -1,4 +1,4 @@
-﻿﻿using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -202,7 +202,7 @@ public class GameManager : MonoBehaviour
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 06;
+    public int patchVersion = 07;
 
     [Header("트러블슈팅 OnGUI 디스플레이")]
     public bool showVersionGUI = true;
@@ -293,6 +293,17 @@ public class GameManager : MonoBehaviour
             description = "블록건의 기본 탄착점이 지정되지 않아 타겟 부재 시 임의 위치로 발사되던 문제",
             cause = "DefultTarget 트랜스폼 연동 누락 및 적 탐색 상태(발견/이탈)에 따른 동적 탄착점 전환 로직 부재",
             solution = "DefultTarget을 기본 탄착점으로 자동 바인딩하고, 적 부재 시 DefultTarget 위치로 발사, 적 발견 시 해당 적 위치로 조준, 시야 이탈 시 다시 DefultTarget으로 복귀하도록 구현"
+        }
+    ,
+        new TroubleshootingEntry()
+        {
+            type = "오류",
+            foundVersion = "0.00.06",
+            status = "수정완료",
+            appliedVersion = "0.00.07",
+            description = "라이트닝 실드(낙뢰)가 발사되지 않거나 주변 몬스터 부재 시 스킬이 반응하지 않는 문제",
+            cause = "주변 반경 내 몬스터 부재 시 발사 취소(return) 처리, 좁은 탐색 반경(5f), 수동 발사 시 실시간 타겟 미탐색 및 LightningBullet의 monsterLayer 초기화 누락",
+            solution = "발사 시 실시간 타겟 탐색 적용, 몬스터 부재 시 전방 총구 위치에 Fallback 1회 낙뢰 생성, 탐색 반경 10f 상향 및 monsterLayer 자동 할당 방어 코드 추가"
         }
     };
 
