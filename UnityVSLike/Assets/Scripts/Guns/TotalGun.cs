@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,7 +8,6 @@ using UnityEngine;
 public interface ITotalGunState
 {
     TotalGun.GunType Type { get; }
-    float FireInterval { get; }
     void Enter(TotalGun gun);
     void Update(TotalGun gun);
     void Shot(TotalGun gun, Vector3 dir);
@@ -29,72 +28,50 @@ public class TotalGun : MonoBehaviour
         LightningShield
     }
 
-    [Header("무기 타입 및 유한 상태 설정")]
+    [Header("=== 무기 타입 및 유한 상태 ===")]
     [SerializeField] private GunType currentGunType = GunType.DefaultGun;
     public GunType CurrentGunType => currentGunType;
 
-    // 현재 활성화된 유한 상태
     private ITotalGunState currentState;
     public ITotalGunState CurrentState => currentState;
 
-    [Header("단일 공통 발사 타이머")]
+    [Header("=== 공통 기본 설정 (Common Settings) ===")]
+    [Tooltip("탄환 발사 속도 및 위력")]
+    public float shotPower = 10f;
+
+    [Tooltip("자동 발사 주기 / 쿨타임 (초)")]
+    public float fireInterval = 0.5f;
+
+    [Tooltip("적 탐색 및 사거리 반경")]
+    public float searchRadius = 10f;
+
+    [Tooltip("현재 상태에서 발사할 탄환 프리팹")]
+    public GameObject prefabBullet;
+
     [SerializeField] private float fireTimer = 0f;
     public float FireTimer => fireTimer;
 
-    [Header("공통 총구 (FirePoint) & 마스터")]
+    [Header("=== 공통 총구 및 소유자 ===")]
     public Transform firePoint;
     public Vector3 defaultFirePointOffset = new Vector3(0.5f, 0f, 0f);
     public Player master;
     public LayerMask monsterLayer;
 
-    [Header("=== 1. Default Gun (기본 총) ===")]
-    public GameObject prefabDefaultBullet;
-    public float defaultShotPower = 10f;
-    public float defaultFireInterval = 0.5f;
-
-    [Header("=== 2. Kunai Gun (쿠나이) ===")]
-    public GameObject prefabKunaiBullet;
-    public float kunaiShotPower = 10f;
-    public float kunaiSearchRadius = 10f;
-    public float kunaiFireInterval = 0.5f;
-
-    [Header("=== 3. Shot Gun (샷건) ===")]
-    public GameObject prefabShotgunBullet;
-    public float shotgunShotPower = 10f;
-    public float shotgunSearchRadius = 10f;
+    [Header("=== 무기별 특화 설정: 샷건 (ShotGun) ===")]
     public float shotgunSpreadAngle = 30f;
-    public float shotgunFireInterval = 0.2f;
-    [SerializeField] public Transform shotgunCurrentTarget;
     public bool shotgunShowGizmos = true;
     public Color shotgunSearchColor = Color.green;
     public Color shotgunSpreadColor = Color.red;
     public float shotgunDebugRayDuration = 0.5f;
+    [HideInInspector] public Transform shotgunCurrentTarget;
     [HideInInspector] public float shotgunAngleDifference;
 
-    [Header("=== 4. Rocket Launcher (로켓 런처) ===")]
-    public GameObject prefabRocketBullet;
-    public float rocketLaunchForce = 15f;
-    public float rocketSearchRadius = 10f;
-    public float rocketFireInterval = 1.5f;
-
-    [Header("=== 5. Soccer Gun (축구공) ===")]
-    public GameObject prefabSoccerBullet;
-    public float soccerShotPower = 12f;
-    public float soccerSearchRadius = 10f;
-    public float soccerFireInterval = 2.0f;
-
-    [Header("=== 6. Block Gun (블록 포물선) ===")]
-    public GameObject prefabBlockBullet;
+    [Header("=== 무기별 특화 설정: 블록건 (BlockGun) ===")]
     public float blockFlightTime = 1.0f;
-    public float blockRange = 8f;
-    public float blockAttackInterval = 2.0f;
     public Transform blockDefaultTarget;
     [HideInInspector] public Transform blockTargetTransform = null;
 
-    [Header("=== 7. Lightning Shield (낙뢰 실드) ===")]
-    public GameObject prefabLightningBullet;
-    public float lightningDetectionRadius = 5f;
-    public float lightningStrikeInterval = 1.5f;
+    [Header("=== 무기별 특화 설정: 낙뢰실드 (LightningShield) ===")]
     public int lightningMaxTargets = 3;
     [HideInInspector] public List<Transform> lightningCurrentTargets = new List<Transform>();
 
@@ -112,39 +89,37 @@ public class TotalGun : MonoBehaviour
 
         InitFirePoint();
         InitDefaultTargets();
-        AutoLoadResourcePrefabs();
     }
 
     private void Start()
     {
-        // 시작 시 초기 무기 상태로 진입
+        // 초기 무기 유한상태로 진입
         SetGunType(currentGunType);
     }
 
     private void Update()
     {
-        // 1. 디버그/테스트 편의를 위한 1~7 숫자키 무기 상태 실시간 변경
+        // 1. 디버그 및 테스트용 숫자키 무기 상태 실시간 변경
         HandleWeaponSwitchInput();
 
         if (currentState == null) return;
 
-        // 2. 현재 상태의 프레임별 타겟 갱신/상태 로직 실행
+        // 2. 현재 상태의 프레임별 타겟 추적/갱신 로직 단독 실행
         currentState.Update(this);
 
-        // 3. 단일 공통 타이머로 현재 상태의 쿨타임(FireInterval)만 체크하여 단일 작동
+        // 3. 단일 공통 타이머로 공통 fireInterval 쿨타임 체크 후 발사
         fireTimer += Time.deltaTime;
-        if (fireTimer >= currentState.FireInterval)
+        if (fireTimer >= fireInterval)
         {
             fireTimer = 0f;
             currentState.Shot(this, GetPlayerFacingDirection());
         }
     }
 
-    #region 유한상태 머신 (FSM) 전이 및 무기 전환
+    #region 유한상태 머신 (FSM) 제어
 
     /// <summary>
     /// 무기 타입을 변경하고 해당 유한상태(State)로 전이합니다.
-    /// updateObjectName이 true인 경우 오브젝트명에 상태명을 반영합니다.
     /// </summary>
     public void SetGunType(GunType newGunType, bool updateObjectName = false)
     {
@@ -169,13 +144,13 @@ public class TotalGun : MonoBehaviour
         }
 
         currentState = newState;
-        fireTimer = 0f; // 상태 전이 시 타이머 초기화
+        fireTimer = 0f; // 상태 전환 시 타이머 리셋
 
         if (currentState != null)
         {
             currentGunType = currentState.Type;
             currentState.Enter(this);
-            Debug.Log($"[TotalGun ({gameObject.name})] 유한상태 진입 -> {currentGunType} (발사주기: {currentState.FireInterval}s)");
+            Debug.Log($"[TotalGun ({gameObject.name})] 유한상태 진입 -> {currentGunType} (위력: {shotPower}, 쿨타임: {fireInterval}s, 반경: {searchRadius})");
         }
     }
 
@@ -225,7 +200,7 @@ public class TotalGun : MonoBehaviour
 
     #endregion
 
-    #region 공통 헬퍼 메서드
+    #region 공통 유틸리티 메서드
 
     private void InitFirePoint()
     {
@@ -257,20 +232,9 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    private void AutoLoadResourcePrefabs()
-    {
-        if (prefabDefaultBullet == null) prefabDefaultBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
-        if (prefabKunaiBullet == null) prefabKunaiBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
-        if (prefabShotgunBullet == null) prefabShotgunBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
-        if (prefabRocketBullet == null) prefabRocketBullet = Resources.Load<GameObject>("Prefabs/Bullet/RocketBullet");
-        if (prefabSoccerBullet == null) prefabSoccerBullet = Resources.Load<GameObject>("Prefabs/Bullet/SoccerBullet");
-        if (prefabBlockBullet == null) prefabBlockBullet = Resources.Load<GameObject>("Prefabs/Bullet/BlockBellet");
-        if (prefabLightningBullet == null) prefabLightningBullet = Resources.Load<GameObject>("Prefabs/Bullet/LightningBullet");
-    }
-
     public Vector3 GetSpawnPosition()
     {
-        return firePoint != null ? firePoint.position : transform.position;
+        return firePoint;
     }
 
     public Vector3 GetSpawnPosition(Vector3 dir)
@@ -365,26 +329,27 @@ public class TotalGun : MonoBehaviour
 public class DefaultGunState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.DefaultGun;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 0.5f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.defaultFireInterval;
+        gun.shotPower = 10f;
+        gun.fireInterval = 0.5f;
+        gun.searchRadius = 10f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
     }
 
     public void Update(TotalGun gun) { }
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabDefaultBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
         Vector3 spawnPos = gun.GetSpawnPosition(dir);
-        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabDefaultBullet, spawnPos, Quaternion.identity);
+        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Init(dir, gun.master, gun.defaultShotPower);
+            bullet.Init(dir, gun.master, gun.shotPower);
         }
     }
 
@@ -398,38 +363,30 @@ public class DefaultGunState : ITotalGunState
 public class KunaiGunState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.KunaiGun;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 0.5f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.kunaiFireInterval;
+        gun.shotPower = 10f;
+        gun.fireInterval = 0.5f;
+        gun.searchRadius = 10f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
     }
 
     public void Update(TotalGun gun) { }
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabKunaiBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
-        Transform nearestEnemy = gun.FindNearestEnemy(gun.transform.position, gun.kunaiSearchRadius);
+        Transform nearestEnemy = gun.FindNearestEnemy(gun.transform.position, gun.searchRadius);
         Vector3 spawnPos = gun.GetSpawnPosition();
-        Vector2 finalDir;
+        Vector2 finalDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - spawnPos).normalized : (Vector2)dir;
 
-        if (nearestEnemy != null)
-        {
-            finalDir = (nearestEnemy.position - spawnPos).normalized;
-        }
-        else
-        {
-            finalDir = dir;
-        }
-
-        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabKunaiBullet, spawnPos, Quaternion.identity);
+        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Init(finalDir, gun.master, gun.kunaiShotPower);
+            bullet.Init(finalDir, gun.master, gun.shotPower);
         }
     }
 
@@ -438,7 +395,7 @@ public class KunaiGunState : ITotalGunState
     public void DrawGizmos(TotalGun gun)
     {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(gun.transform.position, gun.kunaiSearchRadius);
+        Gizmos.DrawWireSphere(gun.transform.position, gun.searchRadius);
     }
 }
 
@@ -448,25 +405,26 @@ public class KunaiGunState : ITotalGunState
 public class ShotGunState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.ShotGun;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 0.2f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.shotgunFireInterval;
+        gun.shotPower = 10f;
+        gun.fireInterval = 0.2f;
+        gun.searchRadius = 10f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/Bullet");
     }
 
     public void Update(TotalGun gun)
     {
-        if (!gun.IsTargetValid(gun.shotgunCurrentTarget, gun.shotgunSearchRadius))
+        if (!gun.IsTargetValid(gun.shotgunCurrentTarget, gun.searchRadius))
         {
-            gun.shotgunCurrentTarget = gun.FindNearestEnemy(gun.transform.position, gun.shotgunSearchRadius);
+            gun.shotgunCurrentTarget = gun.FindNearestEnemy(gun.transform.position, gun.searchRadius);
         }
     }
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabShotgunBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
@@ -495,11 +453,11 @@ public class ShotGunState : ITotalGunState
             Debug.DrawLine(spawnPos, (Vector2)spawnPos + (finalDir * 5f), gun.shotgunSpreadColor, gun.shotgunDebugRayDuration);
         }
 
-        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabShotgunBullet, spawnPos, Quaternion.identity);
+        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Init(finalDir, gun.master, gun.shotgunShotPower);
+            bullet.Init(finalDir, gun.master, gun.shotPower);
         }
     }
 
@@ -511,7 +469,7 @@ public class ShotGunState : ITotalGunState
         Vector3 currentPos = gun.transform.position;
 
         Gizmos.color = gun.shotgunSearchColor;
-        Gizmos.DrawWireSphere(currentPos, gun.shotgunSearchRadius);
+        Gizmos.DrawWireSphere(currentPos, gun.searchRadius);
 
         if (gun.shotgunCurrentTarget != null)
         {
@@ -538,29 +496,30 @@ public class ShotGunState : ITotalGunState
 public class RocketLauncherState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.RocketLauncher;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 1.5f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.rocketFireInterval;
+        gun.shotPower = 15f;
+        gun.fireInterval = 1.5f;
+        gun.searchRadius = 10f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/RocketBullet");
     }
 
     public void Update(TotalGun gun) { }
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabRocketBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
         Vector3 launchPosition = gun.GetSpawnPosition();
-        Transform nearestEnemy = gun.FindNearestEnemy(gun.transform.position, gun.rocketSearchRadius);
+        Transform nearestEnemy = gun.FindNearestEnemy(gun.transform.position, gun.searchRadius);
         Vector2 launchDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - launchPosition).normalized : (Vector2)dir;
 
-        GameObject rocketObj = UnityEngine.Object.Instantiate(gun.prefabRocketBullet, launchPosition, Quaternion.identity);
+        GameObject rocketObj = UnityEngine.Object.Instantiate(gun.prefabBullet, launchPosition, Quaternion.identity);
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();
         if (bulletScript != null)
         {
-            bulletScript.Init(launchDir, gun.master, gun.rocketLaunchForce);
+            bulletScript.Init(launchDir, gun.master, gun.shotPower);
         }
     }
 
@@ -569,7 +528,7 @@ public class RocketLauncherState : ITotalGunState
     public void DrawGizmos(TotalGun gun)
     {
         Gizmos.color = Color.magenta;
-        Gizmos.DrawWireSphere(gun.transform.position, gun.rocketSearchRadius);
+        Gizmos.DrawWireSphere(gun.transform.position, gun.searchRadius);
     }
 }
 
@@ -579,29 +538,30 @@ public class RocketLauncherState : ITotalGunState
 public class SoccerGunState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.SoccerGun;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 2.0f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.soccerFireInterval;
+        gun.shotPower = 12f;
+        gun.fireInterval = 2.0f;
+        gun.searchRadius = 10f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/SoccerBullet");
     }
 
     public void Update(TotalGun gun) { }
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabSoccerBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
         Vector3 spawnPos = gun.GetSpawnPosition();
-        Transform target = gun.FindNearestEnemy(gun.transform.position, gun.soccerSearchRadius);
+        Transform target = gun.FindNearestEnemy(gun.transform.position, gun.searchRadius);
         Vector2 finalDir = target != null ? (Vector2)(target.position - spawnPos).normalized : (Vector2)dir;
 
-        GameObject soccerObj = UnityEngine.Object.Instantiate(gun.prefabSoccerBullet, spawnPos, Quaternion.identity);
+        GameObject soccerObj = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPos, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
         if (bullet != null)
         {
-            bullet.Init(finalDir, gun.master, gun.soccerShotPower);
+            bullet.Init(finalDir, gun.master, gun.shotPower);
         }
     }
 
@@ -610,7 +570,7 @@ public class SoccerGunState : ITotalGunState
     public void DrawGizmos(TotalGun gun)
     {
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(gun.transform.position, gun.soccerSearchRadius);
+        Gizmos.DrawWireSphere(gun.transform.position, gun.searchRadius);
     }
 }
 
@@ -620,17 +580,18 @@ public class SoccerGunState : ITotalGunState
 public class BlockGunState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.BlockGun;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 2.0f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.blockAttackInterval;
+        gun.shotPower = 10f;
+        gun.fireInterval = 2.0f;
+        gun.searchRadius = 8f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/BlockBellet");
     }
 
     public void Update(TotalGun gun)
     {
-        gun.blockTargetTransform = gun.FindNearestEnemy(gun.transform.position, gun.blockRange);
+        gun.blockTargetTransform = gun.FindNearestEnemy(gun.transform.position, gun.searchRadius);
         if (gun.blockTargetTransform == null)
         {
             gun.blockTargetTransform = gun.blockDefaultTarget;
@@ -639,10 +600,10 @@ public class BlockGunState : ITotalGunState
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabBlockBullet == null) return;
+        if (gun.prefabBullet == null) return;
 
         Vector3 spawnPos = gun.GetSpawnPosition();
-        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBlockBullet, spawnPos, Quaternion.identity);
+        GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPos, Quaternion.identity);
         BlockBullet blockBullet = copyBullet.GetComponent<BlockBullet>();
 
         if (blockBullet == null) return;
@@ -660,7 +621,7 @@ public class BlockGunState : ITotalGunState
     {
         Vector3 currentPos = gun.transform.position;
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(currentPos, gun.blockRange);
+        Gizmos.DrawWireSphere(currentPos, gun.searchRadius);
 
         if (gun.blockTargetTransform != null)
         {
@@ -679,19 +640,20 @@ public class BlockGunState : ITotalGunState
 public class LightningShieldState : ITotalGunState
 {
     public TotalGun.GunType Type => TotalGun.GunType.LightningShield;
-    public float FireInterval => cachedInterval;
-    private float cachedInterval = 1.5f;
 
     public void Enter(TotalGun gun)
     {
-        cachedInterval = gun.lightningStrikeInterval;
+        gun.shotPower = 10f;
+        gun.fireInterval = 1.5f;
+        gun.searchRadius = 5f;
+        gun.prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/LightningBullet");
     }
 
     public void Update(TotalGun gun)
     {
         gun.lightningCurrentTargets.Clear();
 
-        Collider2D[] enemies = Physics2D.OverlapCircleAll(gun.transform.position, gun.lightningDetectionRadius, gun.monsterLayer);
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(gun.transform.position, gun.searchRadius, gun.monsterLayer);
         if (enemies.Length == 0) return;
 
         int targetCount = Mathf.Min(enemies.Length, gun.lightningMaxTargets);
@@ -706,14 +668,14 @@ public class LightningShieldState : ITotalGunState
 
     public void Shot(TotalGun gun, Vector3 dir)
     {
-        if (gun.prefabLightningBullet == null || gun.lightningCurrentTargets.Count == 0) return;
+        if (gun.prefabBullet == null || gun.lightningCurrentTargets.Count == 0) return;
 
         foreach (Transform target in gun.lightningCurrentTargets)
         {
             if (target == null) continue;
 
             Vector3 spawnPosition = target.position;
-            GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabLightningBullet, spawnPosition, Quaternion.identity);
+            GameObject copyBullet = UnityEngine.Object.Instantiate(gun.prefabBullet, spawnPosition, Quaternion.identity);
 
             LightningBullet bullet = copyBullet.GetComponent<LightningBullet>();
             if (bullet != null)
@@ -729,7 +691,7 @@ public class LightningShieldState : ITotalGunState
     {
         Vector3 currentPos = gun.transform.position;
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(currentPos, gun.lightningDetectionRadius);
+        Gizmos.DrawWireSphere(currentPos, gun.searchRadius);
 
         if (gun.lightningCurrentTargets != null)
         {
