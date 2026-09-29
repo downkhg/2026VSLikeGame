@@ -10,8 +10,8 @@ public class Item : MonoBehaviour
     [Header("아이템 획득 시 점수 (CSV 데이터 없을 시 fallback)")]
     public int Score = 100;
 
-    [Header("변경할 무기 타입 (TotalGun)")]
-    public TotalGun.GunType gunType = TotalGun.GunType.KunaiGun;
+    [Header("변경할 무기 타입 (GunType)")]
+    public GunType gunType = GunType.KunaiGun;
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
@@ -52,16 +52,20 @@ public class Item : MonoBehaviour
             // fallback 직접 적용
             dynamic.Score += Score;
 
-            if (dynamic.gun != null)
+            GunInventory gunInv = dynamic.GetComponent<GunInventory>();
+            if (gunInv == null) gunInv = dynamic.GetComponentInParent<GunInventory>();
+            if (gunInv == null) gunInv = dynamic.GetComponentInChildren<GunInventory>();
+
+            if (gunInv != null)
             {
-                dynamic.gun.SetGunType(gunType);
-            }
-            else
-            {
-                TotalGun totalGun = dynamic.GetComponentInChildren<TotalGun>();
-                if (totalGun != null)
+                gunInv.AddGunByType(gunType);
+                if (dynamic.gun == null)
                 {
-                    totalGun.SetGunType(gunType);
+                    BaseGun addedGun = gunInv.GetGun(gunType);
+                    if (addedGun != null)
+                    {
+                        dynamic.SetActiveGun(addedGun);
+                    }
                 }
             }
 
@@ -72,5 +76,3 @@ public class Item : MonoBehaviour
         Destroy(this.gameObject);
     }
 }
-
-

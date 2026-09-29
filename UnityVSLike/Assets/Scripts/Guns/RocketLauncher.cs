@@ -1,120 +1,63 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class RocketLauncher : MonoBehaviour
+/// <summary>
+/// 4. 로켓 런처 클래스 (BaseGun 상속 및 로켓 발사 다형성 구현)
+/// </summary>
+public class RocketLauncher : BaseGun
 {
-    public GameObject prefabRocketBullet;
-    public float launchForce = 15f;
-    public float searchRadius = 10f;
-
-    [Header("총구 (FirePoint) 위치")]
-    public Transform firePoint;
-
-    [Header("발사 설정")]
-    public float fireInterval = 1.5f;
-    private float fireTimer = 0f;
-
-    public Player master;
-    public LayerMask monsterLayer;
-
-    public Vector3 GetSpawnPosition()
+    // 레거시 프로퍼티 호환
+    public GameObject prefabRocketBullet
     {
-        return firePoint != null ? firePoint.position : transform.position;
+        get => prefabBullet;
+        set => prefabBullet = value;
     }
 
-    private void Awake()
+    public float launchForce
     {
-        if (master == null)
-        {
-            master = GetComponentInParent<Player>();
-        }
+        get => shotPower;
+        set => shotPower = value;
+    }
 
-        if (monsterLayer == 0)
+    protected override void InitDefaultSettings()
+    {
+        shotPower = 15f;
+        fireInterval = 1.5f;
+        searchRadius = 10f;
+        if (prefabBullet == null)
         {
-            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+            prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/RocketBullet");
         }
     }
 
-    private void Update()
+    /// <summary>
+    /// 가장 가까운 적 방향으로 로켓 탄환 발사 (다형성 구현)
+    /// </summary>
+    public override void Shot(Vector3 dir)
     {
-        fireTimer += Time.deltaTime;
-
-        if (fireTimer >= fireInterval)
-        {
-            fireTimer = 0f;
-            Shot(master);
-        }
-    }
-
-    public void Shot(Vector3 dir, Player master)
-    {
-        if (prefabRocketBullet == null) return;
+        if (prefabBullet == null) return;
 
         Vector3 launchPosition = GetSpawnPosition();
-        GameObject rocketObj = Instantiate(prefabRocketBullet, launchPosition, Quaternion.identity);
+        Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
+        Vector2 launchDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - launchPosition).normalized : (Vector2)dir;
 
+        GameObject rocketObj = Instantiate(prefabBullet, launchPosition, Quaternion.identity);
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();
         if (bulletScript != null)
         {
-            bulletScript.Init(dir, master, launchForce);
+            bulletScript.Init(launchDir, master, shotPower);
         }
     }
 
-    public void Shot(Player master)
+    // 하위 호환 메서드
+    public void Shot(Player customMaster)
     {
-        if (prefabRocketBullet == null) return;
-
-        Vector3 launchPosition = GetSpawnPosition();
-        Debug.Log($"[RocketLauncher] 발사 시도 | 발사 위치: {launchPosition}");
-
-        Transform nearestEnemy = FindNearestEnemy();
-        Vector2 launchDir;
-
-        if (nearestEnemy != null)
-        {
-            launchDir = (nearestEnemy.position - launchPosition).normalized;
-        }
-        else
-        {
-            launchDir = transform.right;
-        }
-
-        GameObject rocketObj = Instantiate(prefabRocketBullet, launchPosition, Quaternion.identity);
-
-        Bullet bulletScript = rocketObj.GetComponent<Bullet>();
-        if (bulletScript != null)
-        {
-            bulletScript.Init(launchDir, master, launchForce);
-        }
-
-        Debug.Log($"[RocketLauncher] 로켓 발사 완료 | 위치: {launchPosition} | 방향: {launchDir}");
+        if (customMaster != null) this.master = customMaster;
+        Shot((Vector3)GetPlayerFacingDirection());
     }
 
-    private Transform FindNearestEnemy()
+    protected override void OnDrawGizmos()
     {
-        Collider2D[] monsters = Physics2D.OverlapCircleAll(transform.position, searchRadius, monsterLayer);
-        if (monsters.Length == 0) return null;
-
-        Transform nearest = null;
-        float minDistance = float.MaxValue;
-
-        foreach (var monster in monsters)
-        {
-            float dist = Vector3.Distance(transform.position, monster.transform.position);
-            if (dist < minDistance)
-            {
-                minDistance = dist;
-                nearest = monster.transform;
-            }
-        }
-
-        return nearest;
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.green;
+        Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, searchRadius);
     }
 }

@@ -7557,6 +7557,7 @@ MonoBehaviour:
   player: {fileID: 1031182656}
   equippedGuns: []
   gunObjects: []
+  gunComponents: []
   isLevelUpSelecting: 0
 --- !u!1001 &2357413485910923055
 PrefabInstance:

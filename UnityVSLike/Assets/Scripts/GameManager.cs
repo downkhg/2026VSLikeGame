@@ -202,7 +202,7 @@ public class GameManager : MonoBehaviour
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 07;
+    public int patchVersion = 08;
 
     [Header("트러블슈팅 OnGUI 디스플레이")]
     public bool showVersionGUI = true;
@@ -304,6 +304,16 @@ public class GameManager : MonoBehaviour
             description = "라이트닝 실드(낙뢰)가 발사되지 않거나 주변 몬스터 부재 시 스킬이 반응하지 않는 문제",
             cause = "주변 반경 내 몬스터 부재 시 발사 취소(return) 처리, 좁은 탐색 반경(5f), 수동 발사 시 실시간 타겟 미탐색 및 LightningBullet의 monsterLayer 초기화 누락",
             solution = "발사 시 실시간 타겟 탐색 적용, 몬스터 부재 시 전방 총구 위치에 Fallback 1회 낙뢰 생성, 탐색 반경 10f 상향 및 monsterLayer 자동 할당 방어 코드 추가"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "오류",
+            foundVersion = "0.00.07",
+            status = "수정완료",
+            appliedVersion = "0.00.08",
+            description = "건인벤토리에 추가된 총기 프리팹들이 더미건(GunDumy)에 부착되지 않고, 탄환 발사 위치가 더미건의 파이어포인트(firepoint)를 사용하지 않던 문제",
+            cause = "GunInventory에서 부모 트랜스폼을 GunDumy가 아닌 플레이어로 설정하였고, BaseGun.GetSpawnPosition(dir)에서 firePoint 유무와 상관없이 오프셋 좌표를 반환하여 더미건 파이어포인트 위치가 무시됨",
+            solution = "GunInventory에 gunDummy 및 dummyFirePoint 자동 탐색/바인딩을 구현하여 GunDumy 자식으로 프리팹을 생성하고, BaseGun의 InitFirePoint 및 GetSpawnPosition에서 무조건 더미건의 firepoint 위치를 사용하도록 일원화"
         }
     };
 

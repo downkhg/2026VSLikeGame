@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 교육 및 학습용: 인터페이스 없이 순수 enum과 switch-case 기반의 유한상태(FSM)로 동작하는 TotalGun
+/// BaseGun을 상속받으며, enum 기반으로 7종 무기 상태를 전환/실행할 수 있는 복합 총기 클래스
 /// </summary>
-public class TotalGun : MonoBehaviour
+public class TotalGun : BaseGun
 {
-    // 1. 유한 상태를 정의하는 enum
+    // 1. 무기 상태를 정의하는 enum
     public enum GunType
     {
         DefaultGun,
@@ -22,29 +22,6 @@ public class TotalGun : MonoBehaviour
     [Header("=== 현재 무기 상태 (Gun State) ===")]
     [SerializeField] private GunType currentGunType = GunType.DefaultGun;
     public GunType CurrentGunType => currentGunType;
-
-    [Header("=== 공통 기본 설정 (Common Settings) ===")]
-    [Tooltip("탄환 발사 속도 및 위력")]
-    public float shotPower = 10f;
-
-    [Tooltip("자동 발사 주기 / 쿨타임 (초)")]
-    public float fireInterval = 0.5f;
-
-    [Tooltip("적 탐색 및 사거리 반경")]
-    public float searchRadius = 10f;
-
-    [Tooltip("현재 무기에서 발사할 탄환 프리팹")]
-    public GameObject prefabBullet;
-
-    [Tooltip("단일 공통 발사 타이머")]
-    [SerializeField] private float fireTimer = 0f;
-    public float FireTimer => fireTimer;
-
-    [Header("=== 공통 총구 및 소유자 ===")]
-    public Transform firePoint;
-    public Vector3 defaultFirePointOffset = new Vector3(0.5f, 0f, 0f);
-    public Player master;
-    public LayerMask monsterLayer;
 
     [Header("=== 무기별 특화 설정: 샷건 (ShotGun) ===")]
     public float shotgunSpreadAngle = 30f;
@@ -64,19 +41,9 @@ public class TotalGun : MonoBehaviour
     public int lightningMaxTargets = 3;
     [HideInInspector] public List<Transform> lightningCurrentTargets = new List<Transform>();
 
-    private void Awake()
+    protected override void Awake()
     {
-        if (master == null)
-        {
-            master = GetComponentInParent<Player>();
-        }
-
-        if (monsterLayer == 0)
-        {
-            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
-        }
-
-        InitFirePoint();
+        base.Awake();
         InitDefaultTargets();
     }
 
@@ -86,21 +53,13 @@ public class TotalGun : MonoBehaviour
         SetGunType(currentGunType);
     }
 
-    private void Update()
+    protected override void Update()
     {
-        // 1. 테스트용 숫자키 1~7로 무기 상태 실시간 변경
+        // 1. 단독 테스트용 숫자키 입력 (GunInventory가 없을 때만 동작)
         HandleWeaponSwitchInput();
 
-        // 2. 현재 enum 상태에 따른 실시간 타겟 추적/갱신
-        UpdateCurrentState();
-
-        // 3. 단일 공통 타이머로 쿨타임 체크 후 자동 발사
-        fireTimer += Time.deltaTime;
-        if (fireTimer >= fireInterval)
-        {
-            fireTimer = 0f;
-            Shot(GetPlayerFacingDirection());
-        }
+        // 2. 부모의 Update() 실행: UpdateTarget() 호출 및 단일 fireTimer 쿨타임 기반 다형적 Shot() 호출
+        base.Update();
     }
 
     #region enum 기반 유한상태 전환 (State Transition)
@@ -113,7 +72,7 @@ public class TotalGun : MonoBehaviour
         currentGunType = newGunType;
         fireTimer = 0f; // 상태 전환 시 타이머 리셋
 
-        // enum에 따라 각 무기의 기본 스펙과 프리팹 적용 (OnEnter 역할)
+        // enum에 따라 각 무기의 기본 스펙과 프리팹 적용
         switch (currentGunType)
         {
             case GunType.DefaultGun:
@@ -190,12 +149,12 @@ public class TotalGun : MonoBehaviour
 
     #endregion
 
-    #region enum 상태별 Update 및 Shot 처리 (switch-case)
+    #region enum 상태별 UpdateTarget 및 Shot 다형성 구현
 
     /// <summary>
-    /// 매 프레임 현재 무기 상태에 맞는 타겟 탐색/갱신을 수행합니다.
+    /// BaseGun의 가상 메서드 오버라이드: 현재 무기 상태에 맞는 타겟 탐색 수행
     /// </summary>
-    private void UpdateCurrentState()
+    protected override void UpdateTarget()
     {
         switch (currentGunType)
         {
@@ -222,7 +181,7 @@ public class TotalGun : MonoBehaviour
                     int targetCount = Mathf.Min(enemies.Length, lightningMaxTargets);
                     for (int i = 0; i < targetCount; i++)
                     {
-                        if (enemies[i] != null)
+                        if (enemies[i] != null && enemies[i].gameObject.activeInHierarchy)
                         {
                             lightningCurrentTargets.Add(enemies[i].transform);
                         }
@@ -232,16 +191,10 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    public void Shot()
-    {
-        Vector3 defaultDir = GetPlayerFacingDirection();
-        Shot(defaultDir);
-    }
-
     /// <summary>
-    /// 현재 enum 상태에 따라 해당하는 무기 발사 로직을 분기 실행합니다.
+    /// BaseGun의 추상 메서드 오버라이드: 현재 enum 상태에 따라 해당하는 무기 발사 로직 실행
     /// </summary>
-    public void Shot(Vector3 dir)
+    public override void Shot(Vector3 dir)
     {
         switch (currentGunType)
         {
@@ -279,11 +232,9 @@ public class TotalGun : MonoBehaviour
 
     #region 무기별 발사 세부 메서드
 
-    // 1. 기본 총 발사
     private void ShotDefault(Vector3 dir)
     {
         if (prefabBullet == null) return;
-
         Vector3 spawnPos = GetSpawnPosition(dir);
         GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
@@ -293,11 +244,9 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 2. 쿠나이 발사 (가장 가까운 적 조준)
     private void ShotKunai(Vector3 dir)
     {
         if (prefabBullet == null) return;
-
         Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
         Vector3 spawnPos = GetSpawnPosition();
         Vector2 finalDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - spawnPos).normalized : (Vector2)dir;
@@ -310,7 +259,6 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 3. 샷건 발사 (부채꼴 산탄 분산)
     private void ShotShotgun(Vector3 dir)
     {
         if (prefabBullet == null) return;
@@ -350,7 +298,6 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 4. 로켓 런처 발사
     private void ShotRocket(Vector3 dir)
     {
         if (prefabBullet == null) return;
@@ -367,7 +314,6 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 5. 축구공 발사
     private void ShotSoccer(Vector3 dir)
     {
         if (prefabBullet == null) return;
@@ -384,7 +330,6 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    // 6. 블록 포물선 발사
     private void ShotBlock(Vector3 dir)
     {
         if (prefabBullet == null) return;
@@ -402,17 +347,14 @@ public class TotalGun : MonoBehaviour
         blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, master);
     }
 
-    // 7. 낙뢰 실드 시전
     private void ShotLightning(Vector3 dir)
     {
         if (prefabBullet == null) return;
 
-        // 발사 직전 실시간 타겟 탐색 최신화
-        UpdateCurrentState();
+        UpdateTarget();
 
         if (lightningCurrentTargets != null && lightningCurrentTargets.Count > 0)
         {
-            // 주변 몬스터가 있으면 각 몬스터 위치에 낙뢰 생성
             foreach (Transform target in lightningCurrentTargets)
             {
                 if (target == null || !target.gameObject.activeInHierarchy) continue;
@@ -429,7 +371,6 @@ public class TotalGun : MonoBehaviour
         }
         else
         {
-            // 주변에 몬스터가 없으면 플레이어 전방 발사 위치에 Fallback 1회 낙뢰 생성
             Vector3 fallbackPos = GetSpawnPosition(dir);
             GameObject copyBullet = Instantiate(prefabBullet, fallbackPos, Quaternion.identity);
 
@@ -443,28 +384,6 @@ public class TotalGun : MonoBehaviour
 
     #endregion
 
-    #region 공통 유틸리티 메서드
-
-    private void InitFirePoint()
-    {
-        if (firePoint == null)
-        {
-            Transform found = transform.Find("FirePoint");
-            if (found != null)
-            {
-                firePoint = found;
-            }
-            else
-            {
-                GameObject fpObj = new GameObject("FirePoint");
-                fpObj.transform.SetParent(transform);
-                fpObj.transform.localPosition = defaultFirePointOffset;
-                fpObj.transform.localRotation = Quaternion.identity;
-                firePoint = fpObj.transform;
-            }
-        }
-    }
-
     private void InitDefaultTargets()
     {
         if (blockDefaultTarget == null)
@@ -475,85 +394,9 @@ public class TotalGun : MonoBehaviour
         }
     }
 
-    public Vector3 GetSpawnPosition()
-    {
-        return firePoint != null ? firePoint.position : transform.position;
-    }
-
-    public Vector3 GetSpawnPosition(Vector3 dir)
-    {
-        if (firePoint != null)
-        {
-            return transform.position + (dir.normalized * defaultFirePointOffset.magnitude);
-        }
-        return transform.position + (dir.normalized * defaultFirePointOffset.magnitude);
-    }
-
-    public Vector2 GetPlayerFacingDirection()
-    {
-        if (master != null && master.transform.localScale.x < 0)
-        {
-            return Vector2.left;
-        }
-
-        if (Mathf.Abs(transform.right.x) > 0.01f || Mathf.Abs(transform.right.y) > 0.01f)
-        {
-            return transform.right;
-        }
-
-        return Vector2.right;
-    }
-
-    public Transform FindNearestEnemy(Vector3 origin, float radius)
-    {
-        Collider2D[] enemies = Physics2D.OverlapCircleAll(origin, radius, monsterLayer);
-        if (enemies.Length == 0) return null;
-
-        Transform nearest = null;
-        float minDistance = float.MaxValue;
-
-        foreach (Collider2D enemy in enemies)
-        {
-            if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
-
-            float dist = Vector3.Distance(origin, enemy.transform.position);
-            if (dist < minDistance && dist <= radius)
-            {
-                minDistance = dist;
-                nearest = enemy.transform;
-            }
-        }
-
-        return nearest;
-    }
-
-    public bool IsTargetValid(Transform target, float maxRadius)
-    {
-        if (target == null) return false;
-        if (!target.gameObject.activeInHierarchy) return false;
-
-        float distance = Vector3.Distance(transform.position, target.position);
-        return distance <= maxRadius;
-    }
-
-    public Vector2 CalculateBallisticVelocity(Vector2 startPos, Vector2 targetPos, float time)
-    {
-        Vector2 vDist = targetPos - startPos;
-        float gravity = Mathf.Abs(Physics2D.gravity.y);
-
-        if (time <= 0.05f) time = 0.05f;
-
-        float vx = vDist.x / time;
-        float vy = (vDist.y / time) + (0.5f * gravity * time);
-
-        return new Vector2(vx, vy);
-    }
-
-    #endregion
-
     #region Scene Gizmos
 
-    private void OnDrawGizmos()
+    protected override void OnDrawGizmos()
     {
         Vector3 currentPos = transform.position;
 

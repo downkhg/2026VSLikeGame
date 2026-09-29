@@ -17,7 +17,11 @@ public class Player : MonoBehaviour
         hpMax = hp;
         if (gunInventory == null)
         {
-            gunInventory = GetComponent<GunInventory>();
+            gunInventory = GetComponentInChildren<GunInventory>();
+            if (gunInventory == null)
+            {
+                gunInventory = GetComponent<GunInventory>();
+            }
             if (gunInventory == null)
             {
                 gunInventory = gameObject.AddComponent<GunInventory>();

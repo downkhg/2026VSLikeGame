@@ -1,0 +1,88 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="BaseGun">
+    <Position X="11.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACQMABAAAICQAgAMAABkCAAAAAYIAAAALAAAAAACAEI=</HashCode>
+      <FileName>Assets\Scripts\Guns\BaseGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="BlockGun">
+    <Position X="8.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAEAAgIAgAAAAEAAAAACAAABAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\BlockGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="DefaultGun">
+    <Position X="17.5" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\DefaultGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Gun">
+    <Position X="17.5" Y="11" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAACAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\Gun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="KunaiGun">
+    <Position X="4" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAEAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\KunaiGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LightningShield">
+    <Position X="10.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AGAEAAIAAAAAAAAAAAAACAAAAAAIAAAAkAAAAACAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\LightningShield.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RocketLauncher">
+    <Position X="15.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAEAAAAAAABAAAAAAAAAAAAAAAIAAAgAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\RocketLauncher.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ShotGun">
+    <Position X="19.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAEAAAAAAAEABAAgCAACAAAIBAIAAACAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\ShotGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SoccerGun">
+    <Position X="6.25" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACCEAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Assets\Scripts\Guns\SoccerGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TotalGun">
+    <Position X="13" Y="7.75" Width="1.5" />
+    <NestedTypes>
+      <Enum Name="TotalGun.GunType" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>Assets\Scripts\Guns\TotalGun.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Enum>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAUUABAQCCCEAAqAAAAACEIAAACIAhAAEEASABgAgEA=</HashCode>
+      <FileName>Assets\Scripts\Guns\TotalGun.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="GunInventory">
+    <Position X="4.5" Y="10.75" Width="3" />
+    <TypeIdentifier>
+      <HashCode>GgSEAAwIwSCAAAAAAgAAEIQAAAAACAAFAADAACACAMA=</HashCode>
+      <FileName>Assets\Scripts\GunInventory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="맑은 고딕" Size="9" />
+</ClassDiagram>

@@ -7,11 +7,19 @@ public class GunInventory : MonoBehaviour
     [Header("소유자(플레이어)")]
     [SerializeField] private Player player;
 
+    [Header("더미건(GunDumy) 및 파이어포인트(FirePoint) 참조")]
+    [SerializeField] private Transform gunDummy;
+    [SerializeField] private Transform dummyFirePoint;
+
     [Header("현재 장착된 총기 목록")]
     [SerializeField] private List<ItemInfo> equippedGuns = new List<ItemInfo>();
 
     [Header("플레이어 자식으로 생성된 총기 게임오브젝트 목록")]
     [SerializeField] private List<GameObject> gunObjects = new List<GameObject>();
+
+    [Header("장착된 BaseGun 다형성 컴포넌트 목록")]
+    [SerializeField] private List<BaseGun> gunComponents = new List<BaseGun>();
+    public List<BaseGun> GunComponents => gunComponents;
 
     [Header("레벨업 선택창 활성화 여부")]
     public bool isLevelUpSelecting = false;
@@ -31,20 +39,89 @@ public class GunInventory : MonoBehaviour
     {
         if (player == null)
         {
-            player = GetComponent<Player>();
+            player = GetComponentInParent<Player>();
+            if (player == null)
+            {
+                player = GetComponent<Player>();
+            }
+            if (player == null)
+            {
+                player = FindFirstObjectByType<Player>();
+            }
+        }
+
+        InitGunDummyAndFirePoint();
+    }
+
+    private void Start()
+    {
+        InitGunDummyAndFirePoint();
+
+        // 씬 시작 시 등록된 무기가 없다면, 기본 무기(DefaultGun) 프리팹을 건더미에 추가하여 발사 준비
+        if (gunComponents.Count == 0 && equippedGuns.Count == 0)
+        {
+            AddGunByType(GunType.DefaultGun);
+        }
+    }
+
+    /// <summary>
+    /// 건더미(GunDumy) 오브젝트 및 더미건 하위의 파이어포인트(firepoint)를 탐색하여 바인딩합니다.
+    /// </summary>
+    public void InitGunDummyAndFirePoint()
+    {
+        // 1. 건더미(GunDumy) Transform 찾기
+        if (gunDummy == null)
+        {
+            if (gameObject.name.IndexOf("GunDum", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                gunDummy = this.transform;
+            }
+            else
+            {
+                Transform found = transform.Find("GunDumy");
+                if (found == null && player != null)
+                {
+                    found = player.transform.Find("GunDumy");
+                }
+                if (found == null)
+                {
+                    GameObject go = GameObject.Find("GunDumy");
+                    if (go != null) found = go.transform;
+                }
+                gunDummy = found != null ? found : this.transform;
+            }
+        }
+
+        // 2. 더미건의 파이어포인트(firepoint) Transform 찾기
+        if (dummyFirePoint == null && gunDummy != null)
+        {
+            Transform fp = gunDummy.Find("firepoint");
+            if (fp == null) fp = gunDummy.Find("FirePoint");
+            if (fp == null)
+            {
+                foreach (Transform child in gunDummy.GetComponentsInChildren<Transform>(true))
+                {
+                    if (child.name.IndexOf("firepoint", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        fp = child;
+                        break;
+                    }
+                }
+            }
+            dummyFirePoint = fp;
         }
     }
 
     private void Update()
     {
         // 1. 테스트용 숫자키 1~7: 각 기믹 무기를 건인벤토리에 즉시 추가
-        if (Input.GetKeyDown(KeyCode.Alpha1)) AddGunByType(TotalGun.GunType.DefaultGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha2)) AddGunByType(TotalGun.GunType.KunaiGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha3)) AddGunByType(TotalGun.GunType.ShotGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha4)) AddGunByType(TotalGun.GunType.RocketLauncher);
-        else if (Input.GetKeyDown(KeyCode.Alpha5)) AddGunByType(TotalGun.GunType.SoccerGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha6)) AddGunByType(TotalGun.GunType.BlockGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha7)) AddGunByType(TotalGun.GunType.LightningShield);
+        if (Input.GetKeyDown(KeyCode.Alpha1)) AddGunByType(GunType.DefaultGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha2)) AddGunByType(GunType.KunaiGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha3)) AddGunByType(GunType.ShotGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha4)) AddGunByType(GunType.RocketLauncher);
+        else if (Input.GetKeyDown(KeyCode.Alpha5)) AddGunByType(GunType.SoccerGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha6)) AddGunByType(GunType.BlockGun);
+        else if (Input.GetKeyDown(KeyCode.Alpha7)) AddGunByType(GunType.LightningShield);
 
         // 2. L 키: 레벨업 선택창 열기
         if (Input.GetKeyDown(KeyCode.L))
@@ -68,7 +145,7 @@ public class GunInventory : MonoBehaviour
     /// <summary>
     /// GunType enum 값을 받아 ItemInfoManager에서 정보를 찾아 건인벤토리에 추가합니다.
     /// </summary>
-    public void AddGunByType(TotalGun.GunType gunType)
+    public void AddGunByType(GunType gunType)
     {
         ItemInfo info = ItemInfoManager.Instance.GetItemInfo(gunType);
         if (info == null)
@@ -95,57 +172,122 @@ public class GunInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// 선택한 아이템 정보를 인벤토리에 추가하고 플레이어 자식으로 독립된 TotalGun 오브젝트를 동적 생성하여 무기로 관리합니다.
+    /// 선택한 아이템 정보를 인벤토리에 추가하고 건더미(GunDumy) 자식으로 총기 프리팹을 추가하여 발사되도록 관리합니다.
+    /// 총을 쏘는 위치는 무조건 더미건에 있는 파이어포인트를 사용합니다.
     /// </summary>
     public void AddGun(ItemInfo itemInfo)
     {
         if (itemInfo == null) return;
 
+        InitGunDummyAndFirePoint();
         equippedGuns.Add(itemInfo);
 
-        // 플레이어 자식으로 총기 GameObject 생성 (아이템/무기 타입명을 명시한 오브젝트명 부여)
-        int index = gunObjects.Count;
-        string gunName = $"TotalGun_{itemInfo.GunType}_{index + 1}";
-        GameObject newGunObj = new GameObject(gunName);
-        newGunObj.transform.SetParent(this.transform);
+        // 건더미(GunDumy)를 부모로 하여 총기 GameObject 또는 프리팹 인스턴스 배치
+        Transform parentTransform = gunDummy != null ? gunDummy : this.transform;
 
-        // 총기별 위치 분산 (원형/오프셋 배치)
-        float angle = index * (360f / 6f) * Mathf.Deg2Rad;
-        Vector3 offset = new Vector3(Mathf.Cos(angle) * 0.8f, Mathf.Sin(angle) * 0.8f, 0f);
-        newGunObj.transform.localPosition = offset;
+        int index = gunObjects.Count;
+        string gunName = $"{itemInfo.GunType}_{index + 1}";
+        GameObject newGunObj = new GameObject(gunName);
+        newGunObj.transform.SetParent(parentTransform);
+        newGunObj.transform.localPosition = Vector3.zero;
         newGunObj.transform.localRotation = Quaternion.identity;
 
-        // TotalGun 컴포넌트를 부착/인스턴스화하고 해당 무기의 유한상태(State)로 진입
-        AttachGunComponent(newGunObj, itemInfo.GunType);
+        // 다형성(Polymorphism): GunType에 맞는 BaseGun 프리팹 로드 또는 컴포넌트 부착
+        BaseGun gunComp = AttachGunComponent(newGunObj, itemInfo.GunType);
+        if (gunComp != null)
+        {
+            // 발사 위치는 무조건 더미건에 있는 파이어포인트를 사용하도록 바인딩
+            if (dummyFirePoint != null)
+            {
+                gunComp.firePoint = dummyFirePoint;
+            }
+            if (player != null)
+            {
+                gunComp.master = player;
+            }
+            gunComponents.Add(gunComp);
+        }
 
         gunObjects.Add(newGunObj);
 
-        Debug.Log($"[GunInventory] 새로운 무기 추가됨: {itemInfo.Name} (오브젝트명: {gunName}) | 보유 무기(실드) 수: {equippedGuns.Count}");
+        Debug.Log($"[GunInventory] 건더미에 무기 추가됨: {itemInfo.Name} (오브젝트명: {gunName}, 컴포넌트: {gunComp?.GetType().Name}, 파이어포인트: {dummyFirePoint?.name}) | 보유 무기(실드) 수: {equippedGuns.Count}");
     }
 
     /// <summary>
-    /// 총기 타입에 맞는 컴포넌트나 프리팹을 새 자식 오브젝트에 연결하고 유한상태를 설정합니다.
+    /// 장착된 총기 컴포넌트 중 특정 타입의 BaseGun을 찾아 반환합니다.
     /// </summary>
-    private void AttachGunComponent(GameObject gunObj, TotalGun.GunType gunType)
+    public BaseGun GetGun(GunType gunType)
     {
-        GameObject totalGunPrefab = Resources.Load<GameObject>("Prefabs/Guns/TotalGun");
-        TotalGun totalGun = null;
+        for (int i = 0; i < equippedGuns.Count; i++)
+        {
+            if (equippedGuns[i].GunType == gunType && i < gunComponents.Count)
+            {
+                return gunComponents[i];
+            }
+        }
+        return null;
+    }
 
-        if (totalGunPrefab != null)
+    /// <summary>
+    /// GunType에 따라 다형성을 가진 알맞은 BaseGun 프리팹을 로드/인스턴스화하거나 컴포넌트를 동적으로 부착합니다 (다형성 팩토리).
+    /// </summary>
+    private BaseGun AttachGunComponent(GameObject gunObj, GunType gunType)
+    {
+        // 1. Resources/Prefabs/Guns/{gunType} 프리팹 로드 시도
+        GameObject gunPrefab = Resources.Load<GameObject>($"Prefabs/Guns/{gunType}");
+        if (gunPrefab != null)
         {
-            GameObject instance = Instantiate(totalGunPrefab, gunObj.transform);
-            instance.name = $"TotalGunInstance_{gunType}";
-            totalGun = instance.GetComponent<TotalGun>();
-        }
-        else
-        {
-            totalGun = gunObj.AddComponent<TotalGun>();
+            GameObject instance = Instantiate(gunPrefab, gunObj.transform);
+            instance.name = $"{gunType}_Instance";
+            instance.transform.localPosition = Vector3.zero;
+            instance.transform.localRotation = Quaternion.identity;
+
+            BaseGun gunComp = instance.GetComponent<BaseGun>();
+            if (gunComp != null)
+            {
+                if (dummyFirePoint != null) gunComp.firePoint = dummyFirePoint;
+                if (player != null) gunComp.master = player;
+                return gunComp;
+            }
         }
 
-        if (totalGun != null)
+        // 2. 프리팹이 없을 경우 동적 컴포넌트 부착 fallback
+        BaseGun fallbackComp = null;
+        switch (gunType)
         {
-            totalGun.SetGunType(gunType, false);
+            case GunType.DefaultGun:
+                fallbackComp = gunObj.AddComponent<DefaultGun>();
+                break;
+            case GunType.KunaiGun:
+                fallbackComp = gunObj.AddComponent<KunaiGun>();
+                break;
+            case GunType.ShotGun:
+                fallbackComp = gunObj.AddComponent<ShotGun>();
+                break;
+            case GunType.RocketLauncher:
+                fallbackComp = gunObj.AddComponent<RocketLauncher>();
+                break;
+            case GunType.SoccerGun:
+                fallbackComp = gunObj.AddComponent<SoccerGun>();
+                break;
+            case GunType.BlockGun:
+                fallbackComp = gunObj.AddComponent<BlockGun>();
+                break;
+            case GunType.LightningShield:
+                fallbackComp = gunObj.AddComponent<LightningShield>();
+                break;
+            default:
+                fallbackComp = gunObj.AddComponent<DefaultGun>();
+                break;
         }
+
+        if (fallbackComp != null)
+        {
+            if (dummyFirePoint != null) fallbackComp.firePoint = dummyFirePoint;
+            if (player != null) fallbackComp.master = player;
+        }
+
+        return fallbackComp;
     }
 
     /// <summary>
@@ -162,6 +304,10 @@ public class GunInventory : MonoBehaviour
 
             equippedGuns.RemoveAt(lastIndex);
             gunObjects.RemoveAt(lastIndex);
+            if (gunComponents.Count > lastIndex)
+            {
+                gunComponents.RemoveAt(lastIndex);
+            }
 
             if (removedObj != null)
             {

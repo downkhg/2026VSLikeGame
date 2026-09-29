@@ -86,10 +86,10 @@ public class ItemInfoManager : MonoBehaviour
             string description = tokens[2].Trim();
 
             // GunType Enum 파싱
-            if (!Enum.TryParse(tokens[3].Trim(), out TotalGun.GunType gunType))
+            if (!Enum.TryParse(tokens[3].Trim(), out GunType gunType))
             {
                 Debug.LogWarning($"[ItemInfoManager] 알 수 없는 GunType: '{tokens[3]}' (Line {i + 1})");
-                gunType = TotalGun.GunType.DefaultGun;
+                gunType = GunType.DefaultGun;
             }
 
             int score = int.Parse(tokens[4].Trim());
@@ -131,7 +131,7 @@ public class ItemInfoManager : MonoBehaviour
     /// <summary>
     /// GunType enum 값을 기준으로 단순 리스트를 순회하여 아이템 정보를 가져옵니다 (enum 기반 동기화).
     /// </summary>
-    public ItemInfo GetItemInfo(TotalGun.GunType gunType)
+    public ItemInfo GetItemInfo(GunType gunType)
     {
         for (int i = 0; i < itemInfoList.Count; i++)
         {

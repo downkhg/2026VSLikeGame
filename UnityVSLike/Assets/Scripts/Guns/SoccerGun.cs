@@ -1,105 +1,55 @@
 using UnityEngine;
 
-public class SoccerGun : MonoBehaviour
+/// <summary>
+/// 5. 축구공 건 클래스 (BaseGun 상속 및 바운스 축구공 발사 다형성 구현)
+/// </summary>
+public class SoccerGun : BaseGun
 {
-    public GameObject prefabSoccerBullet;
-    public float shotPower = 12f;
-    public float searchRadius = 10f;
-
-    [Header("총구 (FirePoint) 위치")]
-    public Transform firePoint;
-
-    [Header("발사 설정")]
-    public float fireInterval = 2.0f;
-    private float fireTimer = 0f;
-
-    public Player master;
-    public LayerMask monsterLayer;
-
-    public Vector3 GetSpawnPosition()
+    // 레거시 프로퍼티 호환
+    public GameObject prefabSoccerBullet
     {
-        return firePoint != null ? firePoint.position : transform.position;
+        get => prefabBullet;
+        set => prefabBullet = value;
     }
 
-    private void Awake()
+    protected override void InitDefaultSettings()
     {
-        if (master == null)
+        shotPower = 12f;
+        fireInterval = 2.0f;
+        searchRadius = 10f;
+        if (prefabBullet == null)
         {
-            master = GetComponentInParent<Player>();
-        }
-
-        if (monsterLayer == 0)
-        {
-            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+            prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/SoccerBullet");
         }
     }
 
-    private void Update()
+    /// <summary>
+    /// 가장 가까운 적 방향으로 축구공 발사 (다형성 구현)
+    /// </summary>
+    public override void Shot(Vector3 dir)
     {
-        fireTimer += Time.deltaTime;
-
-        if (fireTimer >= fireInterval)
-        {
-            fireTimer = 0f;
-            Shot(master);
-        }
-    }
-
-    public void Shot(Vector3 dir, Player master)
-    {
-        if (prefabSoccerBullet == null) return;
+        if (prefabBullet == null) return;
 
         Vector3 spawnPos = GetSpawnPosition();
-        GameObject soccerObj = Instantiate(prefabSoccerBullet, spawnPos, Quaternion.identity);
+        Transform target = FindNearestEnemy(transform.position, searchRadius);
+        Vector2 finalDir = target != null ? (Vector2)(target.position - spawnPos).normalized : (Vector2)dir;
+
+        GameObject soccerObj = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
         if (bullet != null)
         {
-            bullet.Init(dir, master, shotPower);
+            bullet.Init(finalDir, master, shotPower);
         }
     }
 
-    public void Shot(Player master)
+    // 하위 호환 메서드
+    public void Shot(Player customMaster)
     {
-        if (prefabSoccerBullet == null) return;
-
-        Vector3 spawnPos = GetSpawnPosition();
-        Debug.Log($"[SoccerGun] 축구공 발사 시도 | 발사 위치: {spawnPos}");
-
-        Transform target = FindNearestEnemy();
-        Vector2 dir = target != null ? (target.position - spawnPos).normalized : (Vector2)transform.right;
-
-        GameObject soccerObj = Instantiate(prefabSoccerBullet, transform.position, Quaternion.identity);
-        SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();
-        if (bullet != null)
-        {
-            bullet.Init(dir, master, shotPower);
-        }
-
-        Debug.Log($"[SoccerGun] 축구공 발사 완료 | 방향: {dir}");
+        if (customMaster != null) this.master = customMaster;
+        Shot((Vector3)GetPlayerFacingDirection());
     }
 
-    private Transform FindNearestEnemy()
-    {
-        Collider2D[] monsters = Physics2D.OverlapCircleAll(transform.position, searchRadius, monsterLayer);
-        if (monsters.Length == 0) return null;
-
-        Transform nearest = null;
-        float minDistance = float.MaxValue;
-
-        foreach (var monster in monsters)
-        {
-            float dist = Vector3.Distance(transform.position, monster.transform.position);
-            if (dist < minDistance)
-            {
-                minDistance = dist;
-                nearest = monster.transform;
-            }
-        }
-
-        return nearest;
-    }
-
-    private void OnDrawGizmos()
+    protected override void OnDrawGizmos()
     {
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, searchRadius);

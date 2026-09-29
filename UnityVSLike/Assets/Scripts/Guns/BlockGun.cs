@@ -1,41 +1,42 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class BlockGun : MonoBehaviour
+/// <summary>
+/// 6. 블록 포물선 건 클래스 (BaseGun 상속 및 역탄도 포물선 발사 다형성 구현)
+/// </summary>
+public class BlockGun : BaseGun
 {
-    public GameObject prefabBlockBullet;
-    public float shotSpeed = 12f;
-    public float maxDistance = 6f;
-
-    public LayerMask monsterLayer;
-    public float range = 8f;
-
-    [Header("타겟팅 및 기본 탄착점 설정")]
-    [Header("총구 (FirePoint) 위치")]
-    public Transform firePoint;
-
-    [Header("타겟팅 및 기본 탄착점 설정")]
+    [Header("=== 블록건 전용 특화 설정 ===")]
+    public float flightTime = 1.0f;
     public Transform defaultTarget;
-    public Transform targetTransform = null;
+    [HideInInspector] public Transform targetTransform = null;
 
-    [Header("쿨타임 설정")]
-    public float attackInterval = 2.0f;
-    private float lastShotTime = 0f;
-
-    private Player ownerPlayer;
-
-    public Vector3 GetSpawnPosition()
+    // 레거시 프로퍼티 호환
+    public GameObject prefabBlockBullet
     {
-        return firePoint != null ? firePoint.position : transform.position;
+        get => prefabBullet;
+        set => prefabBullet = value;
     }
 
-    private void Awake()
+    public float range
     {
-        ownerPlayer = GetComponentInParent<Player>();
-        if (monsterLayer == 0)
+        get => searchRadius;
+        set => searchRadius = value;
+    }
+
+    public float attackInterval
+    {
+        get => fireInterval;
+        set => fireInterval = value;
+    }
+
+    protected override void InitDefaultSettings()
+    {
+        shotPower = 10f;
+        fireInterval = 2.0f;
+        searchRadius = 8f;
+        if (prefabBullet == null)
         {
-            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+            prefabBullet = Resources.Load<GameObject>("Prefabs/Bullet/BlockBellet");
         }
 
         if (defaultTarget == null)
@@ -46,109 +47,60 @@ public class BlockGun : MonoBehaviour
         }
     }
 
-    private void Update()
+    /// <summary>
+    /// 매 프레임 타겟 몬스터 또는 기본 탄착점 갱신
+    /// </summary>
+    protected override void UpdateTarget()
     {
-        // 씬 뷰 기즈모 및 탄착점 확인을 위해 타겟 위치 실시간 갱신
-        UpdateTargetPosition();
-
-        if (Time.time >= lastShotTime + attackInterval)
-        {
-            Shot(ownerPlayer);
-            lastShotTime = Time.time;
-        }
-    }
-
-    private void UpdateTargetPosition()
-    {
-        targetTransform = GetNearestMonsterTransform();
+        targetTransform = FindNearestEnemy(transform.position, searchRadius);
         if (targetTransform == null)
         {
             targetTransform = defaultTarget;
-        } 
+        }
     }
 
-    public void Shot(Player customMaster = null)
+    /// <summary>
+    /// 목표 지점까지의 포물선(역탄도) 궤적을 계산하여 발사 (다형성 구현)
+    /// </summary>
+    public override void Shot(Vector3 dir)
     {
-        if (customMaster != null) ownerPlayer = customMaster;
-        if (prefabBlockBullet == null) return;
+        if (prefabBullet == null) return;
 
-        // 발사 직전 가장 가까운 적 탐색 및 탄착점 최신화
-        UpdateTargetPosition();
+        UpdateTarget();
 
         Vector3 spawnPos = GetSpawnPosition();
-        GameObject copyBullet = Instantiate(prefabBlockBullet, spawnPos, Quaternion.identity);
+        GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         BlockBullet blockBullet = copyBullet.GetComponent<BlockBullet>();
 
         if (blockBullet == null) return;
 
-        Vector2 targetPos = targetTransform.position;
+        Vector2 targetPos = targetTransform != null ? (Vector2)targetTransform.position : (Vector2)spawnPos + ((Vector2)dir * 3f);
         Vector3 forceOffsetPosition = spawnPos + new Vector3(0.1f, 0.1f, 0f);
         Vector2 launchVelocity = CalculateBallisticVelocity(spawnPos, targetPos, flightTime);
 
-        blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, ownerPlayer);
-
-        Debug.Log($"[BlockGun({this.gameObject.name})] 블록 발사! 발사위치: {spawnPos} | 탄착 목표: {targetPos} | 계산된 초기 속도: {launchVelocity}");
+        blockBullet.InitBulletWithVelocity(launchVelocity, forceOffsetPosition, master);
     }
 
-    private Transform GetNearestMonsterTransform()
+    // 하위 호환 메서드
+    public void Shot(Player customMaster)
     {
-        Collider2D[] monsters = Physics2D.OverlapCircleAll(transform.position, range, monsterLayer);
-        if (monsters.Length == 0) return null;
-
-        GameObject nearestMonster = null;
-        float minDistance = float.MaxValue;
-
-        foreach (var monster in monsters)
-        {
-            if (monster == null || !monster.gameObject.activeInHierarchy) continue;
-
-            float dist = Vector3.Distance(transform.position, monster.transform.position);
-            if (dist < minDistance)
-            {
-                minDistance = dist;
-                nearestMonster = monster.gameObject;
-            }
-        }
-
-        return nearestMonster != null ? nearestMonster.transform : null;
+        if (customMaster != null) this.master = customMaster;
+        Shot((Vector3)GetPlayerFacingDirection());
     }
 
-    [Header("역탄도 (포물선) 설정")]
-    public float flightTime = 1.0f; // 목표 지점까지 도달하는 시간 (초)
-
-    private Vector2 CalculateBallisticVelocity(Vector2 startPos, Vector2 targetPos, float time)
+    protected override void OnDrawGizmos()
     {
-        // 강의 슬라이드 공식 적용:
-        // vDist = target - start
-        // vx = vDist.x / Time
-        // vy = H = (vDist.y / Time) + (G / 2 * Time)
-        Vector2 vDist = targetPos - startPos;
-        float gravity = Mathf.Abs(Physics2D.gravity.y); // Unity 기본 9.81f
-
-        if (time <= 0.05f) time = 0.05f; // 0으로 나누기 방지
-
-        float vx = vDist.x / time;
-        float vy = (vDist.y / time) + (0.5f * gravity * time);
-
-        return new Vector2(vx, vy);
-    }
-
-    private void OnDrawGizmos()
-    {
-        // 1. 탐색 범위 (빨간 원)
+        Vector3 currentPos = transform.position;
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, range);
+        Gizmos.DrawWireSphere(currentPos, searchRadius);
 
-        if (targetTransform == null) return;
-        Vector2 targetPos = targetTransform.position;
-        // 2. 탄착점 표시 (노란 구 및 십자선)
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(targetPos, 0.35f);
-        Gizmos.DrawLine(targetPos + Vector2.left * 0.5f, targetPos + Vector2.right * 0.5f);
-        Gizmos.DrawLine(targetPos + Vector2.down * 0.5f, targetPos + Vector2.up * 0.5f);
-
-        // 3. 발사 위치 -> 탄착점 조준선 (초록 선)
-        Gizmos.color = Color.green;
-        Gizmos.DrawLine(transform.position, targetPos);
+        if (targetTransform != null)
+        {
+            Vector2 targetPos = targetTransform.position;
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(targetPos, 0.35f);
+            Gizmos.color = Color.green;
+            Gizmos.DrawLine(currentPos, targetPos);
+        }
     }
 }

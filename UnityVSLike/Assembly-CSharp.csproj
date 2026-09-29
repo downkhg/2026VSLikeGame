@@ -61,9 +61,11 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.77f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\Guns\DefaultGun.cs" />
     <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
     <Compile Include="Assets\Scripts\ItemInfoManager.cs" />
+    <Compile Include="Assets\Scripts\Guns\GunType.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
     <Compile Include="Assets\Scripts\Bullet\RocketBullet.cs" />
     <Compile Include="Assets\Scripts\Bullet\SoccerBullet.cs" />
@@ -89,6 +91,7 @@
     <Compile Include="Assets\Scripts\Guns\TotalGun.cs" />
     <Compile Include="Assets\Scripts\Guns\BlockGun.cs" />
     <Compile Include="Assets\Scripts\CameraTracker.cs" />
+    <Compile Include="Assets\Scripts\Guns\BaseGun.cs" />
     <Compile Include="Assets\Scripts\Bullet\LightningBullet.cs" />
     <Compile Include="Assets\Scripts\Item.cs" />
     <Compile Include="Assets\Scripts\BaseballBatAttack.cs" />
@@ -102,6 +105,7 @@
     <None Include="Assets\WorkList.txt" />
     <None Include="Assets\용어정리.txt" />
     <None Include="Assets\ClassDiagram1.cd" />
+    <None Include="Assets\Scripts\ClassDiagram2.cd" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
