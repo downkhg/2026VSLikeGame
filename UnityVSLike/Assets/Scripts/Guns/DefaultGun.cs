@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 1. 기본 권총 클래스 (BaseGun 상속 및 Shot 다형성 구현)

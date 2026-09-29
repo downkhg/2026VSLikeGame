@@ -114,14 +114,17 @@ public class GunInventory : MonoBehaviour
 
     private void Update()
     {
-        // 1. 테스트용 숫자키 1~7: 각 기믹 무기를 건인벤토리에 즉시 추가
-        if (Input.GetKeyDown(KeyCode.Alpha1)) AddGunByType(GunType.DefaultGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha2)) AddGunByType(GunType.KunaiGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha3)) AddGunByType(GunType.ShotGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha4)) AddGunByType(GunType.RocketLauncher);
-        else if (Input.GetKeyDown(KeyCode.Alpha5)) AddGunByType(GunType.SoccerGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha6)) AddGunByType(GunType.BlockGun);
-        else if (Input.GetKeyDown(KeyCode.Alpha7)) AddGunByType(GunType.LightningShield);
+        // 1. Dynamic이 없는 단독 테스트 환경에서만 숫자키 1~7로 기믹 무기 추가
+        if (GetComponentInParent<Dynamic>() == null && GetComponent<Dynamic>() == null && FindFirstObjectByType<Dynamic>() == null)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1)) AddGunByType(GunType.DefaultGun);
+            else if (Input.GetKeyDown(KeyCode.Alpha2)) AddGunByType(GunType.KunaiGun);
+            else if (Input.GetKeyDown(KeyCode.Alpha3)) AddGunByType(GunType.ShotGun);
+            else if (Input.GetKeyDown(KeyCode.Alpha4)) AddGunByType(GunType.RocketLauncher);
+            else if (Input.GetKeyDown(KeyCode.Alpha5)) AddGunByType(GunType.SoccerGun);
+            else if (Input.GetKeyDown(KeyCode.Alpha6)) AddGunByType(GunType.BlockGun);
+            else if (Input.GetKeyDown(KeyCode.Alpha7)) AddGunByType(GunType.LightningShield);
+        }
 
         // 2. L 키: 레벨업 선택창 열기
         if (Input.GetKeyDown(KeyCode.L))
@@ -143,16 +146,16 @@ public class GunInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// GunType enum 값을 받아 ItemInfoManager에서 정보를 찾아 건인벤토리에 추가합니다.
+    /// GunType enum 값을 받아 ItemInfoManager에서 정보를 찾아 건인벤토리에 추가하고 생성된 BaseGun을 반환합니다.
     /// </summary>
-    public void AddGunByType(GunType gunType)
+    public BaseGun AddGunByType(GunType gunType)
     {
         ItemInfo info = ItemInfoManager.Instance.GetItemInfo(gunType);
         if (info == null)
         {
             info = new ItemInfo((int)gunType + 100, gunType.ToString(), $"{gunType} 무기", gunType, 100, "");
         }
-        AddGun(info);
+        return AddGun(info);
     }
 
     /// <summary>
@@ -175,9 +178,9 @@ public class GunInventory : MonoBehaviour
     /// 선택한 아이템 정보를 인벤토리에 추가하고 건더미(GunDumy) 자식으로 총기 프리팹을 추가하여 발사되도록 관리합니다.
     /// 총을 쏘는 위치는 무조건 더미건에 있는 파이어포인트를 사용합니다.
     /// </summary>
-    public void AddGun(ItemInfo itemInfo)
+    public BaseGun AddGun(ItemInfo itemInfo)
     {
-        if (itemInfo == null) return;
+        if (itemInfo == null) return null;
 
         InitGunDummyAndFirePoint();
         equippedGuns.Add(itemInfo);
@@ -211,6 +214,7 @@ public class GunInventory : MonoBehaviour
         gunObjects.Add(newGunObj);
 
         Debug.Log($"[GunInventory] 건더미에 무기 추가됨: {itemInfo.Name} (오브젝트명: {gunName}, 컴포넌트: {gunComp?.GetType().Name}, 파이어포인트: {dummyFirePoint?.name}) | 보유 무기(실드) 수: {equippedGuns.Count}");
+        return gunComp;
     }
 
     /// <summary>
@@ -337,7 +341,7 @@ public class GunInventory : MonoBehaviour
         InitStyles();
 
         // 1. 좌측 상단 HUD 표시 (보유 총기/실드 수량)
-        GUI.Box(new Rect(10, 30, 240, 50), $"🛡️ 보유 총기(실드): {equippedGuns.Count}개\n[1~7]: 기믹 추가 | [L]: 레벨업 | [K]: 피격", hudStyle);
+        GUI.Box(new Rect(10, 30, 240, 50), $"🛡️ 보유 총기(실드): {equippedGuns.Count}개\n[1~7]: 무기 변경/추가 | [L]: 레벨업 | [K]: 피격", hudStyle);
 
         // 2. 레벨업 선택 팝업창 표시
         if (isLevelUpSelecting && currentChoices != null && currentChoices.Count > 0)
