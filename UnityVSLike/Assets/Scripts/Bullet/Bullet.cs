@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -85,19 +85,17 @@ public class Bullet : MonoBehaviour
     /// </summary>
     protected virtual void OnHitMonster(Player target)
     {
-        Player attacker = master;
+        if (target == null || target.isDead) return;
 
+        Player attacker = master;
         if (attacker != null)
         {
+            // 공격자(master)가 대상을 공격 -> 사망 시 막타 공격자에게만 EXP/보상 지급
             attacker.Attack(target);
         }
-
-        if (target != null && target.Death())
+        else
         {
-            if (GameManager.GetInstacne() != null && GameManager.GetInstacne().monsterInventory != null)
-            {
-                GameManager.GetInstacne().monsterInventory.AddMonster(target.name);
-            }
+            target.OnDamaged(10);
         }
     }
 

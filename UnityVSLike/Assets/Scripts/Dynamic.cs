@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,14 +17,16 @@ public class Dynamic : MonoBehaviour
     public BaseGun gun;
     public Vector3 dir = Vector3.right;
 
+    private Player cachedPlayer;
+
     private void Awake()
     {
+        cachedPlayer = GetComponent<Player>();
         InitGunInventoryReference();
 
         if (gun == null)
         {
-            //gun = new BaseGun();  //
-            gun =  GetComponentInChildren<BaseGun>();
+            gun = GetComponentInChildren<BaseGun>();
         }
 
         if (gun != null)
@@ -182,19 +184,22 @@ public class Dynamic : MonoBehaviour
     private void OnGUI()
     {
         string activeGunName = gun != null ? gun.GetType().Name : "없음";
-        GUI.Box(new Rect(10, 85, 240, 45), $"Score: {Score}\n[Active Gun]: <color=yellow>{activeGunName}</color> (X:발사 | 1~7:무기변경)");
+        if (cachedPlayer == null) cachedPlayer = GetComponent<Player>();
+
+        string levelExpStr = cachedPlayer != null 
+            ? $"Lv.{cachedPlayer.Lv} (EXP: {cachedPlayer.exp}/{cachedPlayer.expMax}) | HP: {cachedPlayer.hp}/{cachedPlayer.hpMax}" 
+            : $"Score: {Score}";
+
+        GUI.Box(new Rect(10, 85, 270, 50), $"★ {levelExpStr}\nScore: {Score} | [Active]: <color=yellow>{activeGunName}</color>\n(X:발사 | 1~7:무기교체)");
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
         isJump = false;
-        //Debug.Log("OnCollisionEnter2D:" + collision.gameObject.name);
     }
 
     private void OnCollisionExit2D(Collision2D collision)
     {
-        //if(collision.gameObject.name == "Plaform")
-        //    GetComponent<Rigidbody2D>().velocity = Vector2.zero;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
