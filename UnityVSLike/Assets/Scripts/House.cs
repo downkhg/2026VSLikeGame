@@ -9,7 +9,7 @@ public class House : MonoBehaviour
         Debug.Log(gameObject.name+ ":OnTriggerEnter2D:"+collision.gameObject.name);
         if(collision.tag == "Player")
         {
-            GameManager.GetInstacne().SetGUIStatus(GameManager.E_GUI_STATUS.THEEND);
+            GameManager.GetInstacne().guiManager.SetGUIStatus(GUIManager.E_GUI_STATUS.THEEND);
         }
     }
 }

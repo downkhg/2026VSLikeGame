@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,25 +24,32 @@ public class Player : MonoBehaviour
     [Header("건 인벤토리 참조")]
     public GunInventory gunInventory;
 
+    [Header("스테이터스 노출")]
+    public GUIStatusBar guiStatusBarHp;
+
     private void Awake()
     {
         hpMax = hp;
-        if (gunInventory == null)
+
+        // GunInventory는 오직 Player 태그를 가진 플레이어에게만 연동/할당
+        if (CompareTag("Player"))
         {
-            gunInventory = GetComponentInChildren<GunInventory>();
             if (gunInventory == null)
             {
-                gunInventory = GetComponent<GunInventory>();
-            }
-            if (gunInventory == null)
-            {
-                gunInventory = gameObject.AddComponent<GunInventory>();
+                gunInventory = GetComponentInChildren<GunInventory>();
+                if (gunInventory == null)
+                {
+                    gunInventory = GetComponent<GunInventory>();
+                }
             }
         }
     }
 
     private void Update()
     {
+        if (guiStatusBarHp)
+            guiStatusBarHp.SetBarSize(hp, hpMax);
+
         if (Death() && !isDead)
         {
             isDead = true;
@@ -70,7 +77,7 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
-    /// 피격 처리 (총기가 있으면 실드로 1개 소모하여 무효화, 없으면 HP 감소 및 막타 처치자에게 보상 지급)
+    /// 피격 처리 (HP 감소, 플로팅 대미지 출력 및 막타 처치자에게 보상 지급)
     /// </summary>
     /// <param name="damage">입는 피해량</param>
     /// <param name="attacker">피해를 가한 공격자 (막타 판정용)</param>
@@ -78,16 +85,12 @@ public class Player : MonoBehaviour
     {
         if (isDead) return;
 
-        // 1. 건 인벤토리에 총기가 존재하면 실드로 1개 파괴하고 피해 방어
-        if (gunInventory != null && gunInventory.ConsumeShieldGun())
-        {
-            Debug.Log($"<color=cyan>[Player] 총기를 실드로 소모하여 {damage} 피해를 완벽히 막아냈습니다! (현재 HP: {hp}/{hpMax})</color>");
-            return;
-        }
-
-        // 2. 총기가 없으면 실제 플레이어 HP 감소
+        // 1. 실제 체력 감소 적용
         hp = Mathf.Max(0, hp - damage);
         Debug.Log($"<color=red>[Player] '{gameObject.name}' 피격! -{damage} 데미지 (남은 HP: {hp}/{hpMax})</color>");
+
+        // 2. 화면 GUI에 플로팅 대미지 텍스트 출력 (플레이어 피격: 빨간색, 몬스터 피격: 노란색)
+        DamageTextManager.ShowDamage(transform.position, damage, CompareTag("Player"));
 
         // 3. 체력이 0 이하가 되어 사망 시: 막타(마지막 타격)를 친 공격자에게만 경험치 및 처치 보상 지급
         if (hp <= 0)

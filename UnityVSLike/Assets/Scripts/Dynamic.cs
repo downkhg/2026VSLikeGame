@@ -161,9 +161,14 @@ public class Dynamic : MonoBehaviour
             }
         }
 
-        if (transform.position.y < -4)
+        // 5. 레거시 GUI HUD 데이터 정적 전달
+        if (cachedPlayer == null) cachedPlayer = GetComponent<Player>();
+        InitGunInventoryReference();
+        int gunCount = gunInventory != null ? gunInventory.GetGunCount() : 0;
+        string activeGunName = gun != null ? gun.GetType().Name : "없음";
+        if (cachedPlayer != null)
         {
-            //Destroy(this.gameObject);
+            LegacyGUI.SetPlayerHUD(cachedPlayer.Lv, cachedPlayer.exp, cachedPlayer.expMax, cachedPlayer.hp, cachedPlayer.hpMax, Score, activeGunName, gunCount);
         }
     }
 
@@ -179,18 +184,6 @@ public class Dynamic : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Keypad5)) SwitchActiveGun(GunType.SoccerGun);
         else if (Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Keypad6)) SwitchActiveGun(GunType.BlockGun);
         else if (Input.GetKeyDown(KeyCode.Alpha7) || Input.GetKeyDown(KeyCode.Keypad7)) SwitchActiveGun(GunType.LightningShield);
-    }
-
-    private void OnGUI()
-    {
-        string activeGunName = gun != null ? gun.GetType().Name : "없음";
-        if (cachedPlayer == null) cachedPlayer = GetComponent<Player>();
-
-        string levelExpStr = cachedPlayer != null 
-            ? $"Lv.{cachedPlayer.Lv} (EXP: {cachedPlayer.exp}/{cachedPlayer.expMax}) | HP: {cachedPlayer.hp}/{cachedPlayer.hpMax}" 
-            : $"Score: {Score}";
-
-        GUI.Box(new Rect(10, 85, 270, 50), $"★ {levelExpStr}\nScore: {Score} | [Active]: <color=yellow>{activeGunName}</color>\n(X:발사 | 1~7:무기교체)");
     }
 
     private void OnCollisionEnter2D(Collision2D collision)

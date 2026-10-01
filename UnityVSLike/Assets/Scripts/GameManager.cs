@@ -22,127 +22,8 @@ public class GameManager : MonoBehaviour
         instance = this;
     }
 
-    public GameObject objPopupLayer;
-    public GUIInventory guiInventory;
-
-
-    public enum E_GUI_STATUS { TITILE, GAMEOVER, THEEND, PLAY }
-    public List<GameObject> listGUIScence;
-    public E_GUI_STATUS curGUIStatus;
-
-    private void Start()
-    {
-        EventShowMeTheItem();
-
-        if (guiInventory != null)
-            guiInventory.SetInventory(monsterInventory);
-
-        SetGUIStatus(curGUIStatus);
-    }
-
-    public void ShowGUIScence(int idx)
-    {
-        if (listGUIScence == null) return;
-
-        for (int i = 0; i < listGUIScence.Count; i++)
-        {
-            if (listGUIScence[i] != null)
-            {
-                if (i == idx) listGUIScence[i].SetActive(true);
-                else listGUIScence[i].SetActive(false);
-            }
-        }
-    }
-
-    public void SetGUIStatus(E_GUI_STATUS status)
-    {
-        switch (status)
-        {
-            case E_GUI_STATUS.TITILE:
-                Time.timeScale = 0;
-                break;
-            case E_GUI_STATUS.GAMEOVER:
-                Time.timeScale = 0;
-                break;
-            case E_GUI_STATUS.THEEND:
-                Time.timeScale = 0;
-                break;
-            case E_GUI_STATUS.PLAY:
-                Time.timeScale = 1;
-                break;
-        }
-        curGUIStatus = status;
-        ShowGUIScence((int)status);
-    }
-
-    public void UpdateGUIStatus()
-    {
-        switch (curGUIStatus)
-        {
-            case E_GUI_STATUS.TITILE:
-                break;
-            case E_GUI_STATUS.GAMEOVER:
-                break;
-            case E_GUI_STATUS.THEEND:
-                break;
-            case E_GUI_STATUS.PLAY:
-                EventGameOverProcess();
-                EventInventoryInput();
-                break;
-        }
-    }
-
-    public void PopupLayerShow(bool active)
-    {
-        if (guiInventory != null)
-        {
-            if (active)
-                guiInventory.SetInventory(monsterInventory);
-            else
-                guiInventory.CloseIventory();
-        }
-
-        if (objPopupLayer != null)
-            objPopupLayer.SetActive(active);
-    }
-
-    public void EventInventoryInput()
-    {
-        if (objPopupLayer == null) return;
-
-        if (Input.GetKeyDown(KeyCode.I))
-        {
-            if (objPopupLayer.activeSelf)
-            {
-                PopupLayerShow(false);
-            }
-            else
-            {
-                PopupLayerShow(true);
-            }
-        }
-    }
-
-    public void EventGUISceneChange(E_GUI_STATUS state)
-    {
-        SetGUIStatus(state);
-    }
-
-    public void EventGUISceneChange(int idx)
-    {
-        SetGUIStatus((E_GUI_STATUS)idx);
-    }
-
-    public void EventStart()
-    {
-        SetGUIStatus(E_GUI_STATUS.PLAY);
-    }
-
-    public void EventExit()
-    {
-        Debug.Log("GameManager.EventExit()");
-        Application.Quit();
-    }
+    [SerializeField]
+    public GUIManager guiManager;
 
     public void EventGameOverProcess()
     {
@@ -150,7 +31,7 @@ public class GameManager : MonoBehaviour
 
         if (responnerPlayer.objPlayer == null)
         {
-            SetGUIStatus(E_GUI_STATUS.GAMEOVER);
+            guiManager.SetGUIStatus(GUIManager.E_GUI_STATUS.GAMEOVER);
         }
     }
 
@@ -202,7 +83,11 @@ public class GameManager : MonoBehaviour
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 08;
+    public int patchVersion = 10;
+
+    [Header("Legacy GUI (OnGUI) 테스트 On/Off 설정")]
+    public bool enableLegacyGUI = true;
+    public KeyCode toggleLegacyGUIKey = KeyCode.F2;
 
     [Header("트러블슈팅 OnGUI 디스플레이")]
     public bool showVersionGUI = true;
@@ -282,8 +167,7 @@ public class GameManager : MonoBehaviour
             description = "블록건에서 높은 위치의 적(독수리 등)이나 주변 적 위치로 탄착점 지정 및 조준이 정상 작동하지 않던 문제",
             cause = "도달시간(Time) 기반 역탄도 공식 부재 및 가장 가까운 적(targetPos) 실시간 탐색/갱신 누락",
             solution = "가장 가까운 적 위치로 targetPos를 실시간 갱신하고, 슬라이드 역탄도 공식[H(vy) = (vDist.y / Time) + (G/2 * Time), vx = vDist.x / Time]을 적용"
-        }
-    ,
+        },
         new TroubleshootingEntry()
         {
             type = "오류",
@@ -293,8 +177,7 @@ public class GameManager : MonoBehaviour
             description = "블록건의 기본 탄착점이 지정되지 않아 타겟 부재 시 임의 위치로 발사되던 문제",
             cause = "DefultTarget 트랜스폼 연동 누락 및 적 탐색 상태(발견/이탈)에 따른 동적 탄착점 전환 로직 부재",
             solution = "DefultTarget을 기본 탄착점으로 자동 바인딩하고, 적 부재 시 DefultTarget 위치로 발사, 적 발견 시 해당 적 위치로 조준, 시야 이탈 시 다시 DefultTarget으로 복귀하도록 구현"
-        }
-    ,
+        },
         new TroubleshootingEntry()
         {
             type = "오류",
@@ -314,6 +197,26 @@ public class GameManager : MonoBehaviour
             description = "건인벤토리에 추가된 총기 프리팹들이 더미건(GunDumy)에 부착되지 않고, 탄환 발사 위치가 더미건의 파이어포인트(firepoint)를 사용하지 않던 문제",
             cause = "GunInventory에서 부모 트랜스폼을 GunDumy가 아닌 플레이어로 설정하였고, BaseGun.GetSpawnPosition(dir)에서 firePoint 유무와 상관없이 오프셋 좌표를 반환하여 더미건 파이어포인트 위치가 무시됨",
             solution = "GunInventory에 gunDummy 및 dummyFirePoint 자동 탐색/바인딩을 구현하여 GunDumy 자식으로 프리팹을 생성하고, BaseGun의 InitFirePoint 및 GetSpawnPosition에서 무조건 더미건의 firepoint 위치를 사용하도록 일원화"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "오류",
+            foundVersion = "0.00.08",
+            status = "수정완료",
+            appliedVersion = "0.00.09",
+            description = "피격 시 대미지가 GUI(체력바 및 수치 텍스트)에 정상적으로 출력/반영되지 않던 문제",
+            cause = "GUIStatusBar에서 textLabel 갱신 부재로 'HP' 고정 텍스트 유지, Player.Awake에서 몬스터에게도 GunInventory가 추가되어 몬스터 데미지가 차단되던 문제 및 화면 플로팅 대미지 출력 부재",
+            solution = "GUIStatusBar에서 현재 HP 수치(HP cur/max)를 실시간 반영하고, Player의 GunInventory 자동 추가를 플레이어 태그로 한정하며, 피격 시 DamageTextManager를 통해 플로팅 대미지 텍스트를 화면에 출력하도록 개선"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "시스템",
+            foundVersion = "0.00.09",
+            status = "수정완료",
+            appliedVersion = "0.00.10",
+            description = "개별 컴포넌트에 분산되어 있던 레거시 GUI(OnGUI) 렌더링을 정적 클래스(LegacyGUI) 호출 구조로 일원화하고, GameManager에 런타임 On/Off 토글 기능 추가",
+            cause = "Dynamic, GunInventory, MonsterInventory 등에 OnGUI 및 GUIStyle 코드가 분산되어 유지보수성과 확장성이 저하되고 테스트 시 UI 숨김 기능이 부재함",
+            solution = "LegacyGUI 정적 파사드 및 LegacyGUIRenderer 중앙 렌더러를 구축하여 단일 OnGUI로 통합하고, GameManager에 enableLegacyGUI 인스펙터 필드 및 F2 토글 단축키를 추가함"
         }
     };
 
@@ -327,17 +230,40 @@ public class GameManager : MonoBehaviour
     {
         CameraTrackingTargetPlayerProcess();
         EaglePointSetting();
-        UpdateGUIStatus();
+        guiManager.UpdateGUIStatus();
 
-        if (responnerPlayer != null && responnerPlayer.objPlayer != null)
+        // 레거시 GUI On/Off 단축키 (F2) 입력 처리 및 동기화
+        if (Input.GetKeyDown(toggleLegacyGUIKey))
         {
-            if (guiPlayerInfo != null)
+            enableLegacyGUI = !enableLegacyGUI;
+            Debug.Log($"[GameManager] Legacy GUI {(enableLegacyGUI ? "활성화 (ON)" : "비활성화 (OFF)")}");
+        }
+        LegacyGUI.IsEnabled = enableLegacyGUI;
+
+        // 플레이어 정보 GUI 실시간 갱신 (리스폰 개체 또는 씬 내 Player 탐색)
+        if (guiPlayerInfo != null)
+        {
+            Player playerComp = null;
+            if (responnerPlayer != null && responnerPlayer.objPlayer != null)
             {
-                Player playerComp = responnerPlayer.objPlayer.GetComponent<Player>();
-                if (playerComp != null)
+                playerComp = responnerPlayer.objPlayer.GetComponent<Player>();
+            }
+            if (playerComp == null)
+            {
+                GameObject playerGo = GameObject.FindWithTag("Player");
+                if (playerGo != null)
                 {
-                    guiPlayerInfo.Set(playerComp);
+                    playerComp = playerGo.GetComponent<Player>();
                 }
+            }
+            if (playerComp == null)
+            {
+                playerComp = FindFirstObjectByType<Player>();
+            }
+
+            if (playerComp != null)
+            {
+                guiPlayerInfo.Set(playerComp);
             }
         }
     }
@@ -381,7 +307,7 @@ public class GameManager : MonoBehaviour
             for (int i = 0; i < troubleshootingList.Count; i++)
             {
                 var item = troubleshootingList[i];
-                string statusColor = item.status == "완료" ? "lime" : (item.status == "수정중" ? "yellow" : "orange");
+                string statusColor = item.status == "완료" ? "lime" : (item.status == "수정완료" ? "cyan" : (item.status == "수정중" ? "yellow" : "orange"));
 
                 GUILayout.BeginVertical(GUI.skin.box);
                 GUILayout.Label($"<b>#{i + 1} [{item.type}]</b> ({item.foundVersion} -> <color=cyan>{item.appliedVersion}</color>) | 상태: <color={statusColor}><b>{item.status}</b></color>");

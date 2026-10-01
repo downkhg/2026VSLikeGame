@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,8 +12,9 @@ public class GUIPlayerInfo : MonoBehaviour
 
     public void Set(Player player)
     {
-        textName.text = player.gameObject.name;
-        textLv.text = string.Format("Lv.{0}", player.Lv);
-        guiHPBar.SetBarSize(player.hp, player.hpMax);
+        if (player == null) return;
+        if (textName != null) textName.text = player.gameObject.name;
+        if (textLv != null) textLv.text = string.Format("Lv.{0}", player.Lv);
+        if (guiHPBar != null) guiHPBar.SetBarSize(player.hp, player.hpMax);
     }
 }

@@ -61,6 +61,7 @@
     <Analyzer Include="C:\Program Files\Unity\Hub\Editor\6000.0.77f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\GUI\LegacyGUI.cs" />
     <Compile Include="Assets\Scripts\Guns\DefaultGun.cs" />
     <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
@@ -83,6 +84,7 @@
     <Compile Include="Assets\Scripts\Dynamic.cs" />
     <Compile Include="Assets\Scripts\Guns\RocketLauncher.cs" />
     <Compile Include="Assets\Scripts\GunInventory.cs" />
+    <Compile Include="Assets\Scripts\GUI\GUIManager.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIIventoryButton.cs" />
     <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />
@@ -95,6 +97,7 @@
     <Compile Include="Assets\Scripts\Bullet\LightningBullet.cs" />
     <Compile Include="Assets\Scripts\Item.cs" />
     <Compile Include="Assets\Scripts\BaseballBatAttack.cs" />
+    <Compile Include="Assets\Scripts\GUI\DamageTextManager.cs" />
     <Compile Include="Assets\Scripts\MonsterInventory.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIStatusBar.cs" />
     <Compile Include="Assets\Scripts\Guns\KunaiGun.cs" />

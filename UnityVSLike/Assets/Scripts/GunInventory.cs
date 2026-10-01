@@ -27,14 +27,6 @@ public class GunInventory : MonoBehaviour
     // 레벨업 시 추첨된 3개의 선택지
     private List<ItemInfo> currentChoices = new List<ItemInfo>();
 
-    // GUI 스타일 캐싱
-    private GUIStyle titleStyle;
-    private GUIStyle cardStyle;
-    private GUIStyle cardTitleStyle;
-    private GUIStyle cardDescStyle;
-    private GUIStyle hudStyle;
-    private bool isStyleInitialized = false;
-
     private void Awake()
     {
         if (player == null)
@@ -159,7 +151,7 @@ public class GunInventory : MonoBehaviour
     }
 
     /// <summary>
-    /// 뱀서라이크식 레벨업 3지선다 선택창을 띄우고 게임을 일시정지합니다.
+    /// 뱀서라이크식 레벨업 3지선다 선택창을 띄우고 게임을 일시정지합니다. (LegacyGUI 정적 호출)
     /// </summary>
     public void ShowLevelUpSelection()
     {
@@ -170,8 +162,10 @@ public class GunInventory : MonoBehaviour
             return;
         }
 
-        isLevelUpSelecting = true;
-        Time.timeScale = 0f; // 게임 일시정지
+        LegacyGUI.ShowLevelUp(currentChoices, (selectedInfo) =>
+        {
+            AddGun(selectedInfo);
+        });
     }
 
     /// <summary>
@@ -331,97 +325,5 @@ public class GunInventory : MonoBehaviour
     public int GetGunCount()
     {
         return equippedGuns.Count;
-    }
-
-    /// <summary>
-    /// 레거시 OnGUI를 사용한 뱀서라이크식 선택 팝업 및 HUD
-    /// </summary>
-    private void OnGUI()
-    {
-        InitStyles();
-
-        // 1. 좌측 상단 HUD 표시 (보유 총기/실드 수량)
-        GUI.Box(new Rect(10, 30, 240, 50), $"🛡️ 보유 총기(실드): {equippedGuns.Count}개\n[1~7]: 무기 변경/추가 | [L]: 레벨업 | [K]: 피격", hudStyle);
-
-        // 2. 레벨업 선택 팝업창 표시
-        if (isLevelUpSelecting && currentChoices != null && currentChoices.Count > 0)
-        {
-            // 화면 중앙 배경 윈도우 박스
-            float winWidth = 650f;
-            float winHeight = 320f;
-            float winX = (Screen.width - winWidth) * 0.5f;
-            float winY = (Screen.height - winHeight) * 0.5f;
-
-            GUI.Box(new Rect(winX, winY, winWidth, winHeight), "★ LEVEL UP! 새로운 총기를 선택하세요 ★", titleStyle);
-
-            // 3개의 카드형 버튼 배치
-            float cardWidth = 190f;
-            float cardHeight = 220f;
-            float spacing = 15f;
-            float startX = winX + 25f;
-            float startY = winY + 65f;
-
-            for (int i = 0; i < currentChoices.Count; i++)
-            {
-                ItemInfo choice = currentChoices[i];
-                float x = startX + i * (cardWidth + spacing);
-                Rect cardRect = new Rect(x, startY, cardWidth, cardHeight);
-
-                // 카드 배경 박스
-                GUI.Box(cardRect, "");
-
-                // 아이템 정보 텍스트 구성
-                string cardText = $"<b><color=#FFD700>[ {choice.Name} ]</color></b>\n\n" +
-                                  $"타입: {choice.GunType}\n" +
-                                  $"점수: +{choice.Score}\n\n" +
-                                  $"<size=11>{choice.Description}</size>";
-
-                // 카드 클릭(버튼) 처리
-                if (GUI.Button(cardRect, cardText, cardStyle))
-                {
-                    SelectChoice(choice);
-                }
-            }
-        }
-    }
-
-    private void SelectChoice(ItemInfo selectedInfo)
-    {
-        AddGun(selectedInfo);
-
-        // 일시정지 해제 및 창 닫기
-        isLevelUpSelecting = false;
-        Time.timeScale = 1f;
-    }
-
-    private void InitStyles()
-    {
-        if (isStyleInitialized) return;
-
-        titleStyle = new GUIStyle(GUI.skin.box)
-        {
-            fontSize = 18,
-            fontStyle = FontStyle.Bold,
-            alignment = TextAnchor.UpperCenter
-        };
-        titleStyle.normal.textColor = Color.yellow;
-
-        cardStyle = new GUIStyle(GUI.skin.button)
-        {
-            fontSize = 13,
-            alignment = TextAnchor.MiddleCenter,
-            wordWrap = true,
-            richText = true
-        };
-        cardStyle.normal.textColor = Color.white;
-
-        hudStyle = new GUIStyle(GUI.skin.box)
-        {
-            fontSize = 12,
-            alignment = TextAnchor.UpperLeft
-        };
-        hudStyle.normal.textColor = Color.cyan;
-
-        isStyleInitialized = true;
     }
 }

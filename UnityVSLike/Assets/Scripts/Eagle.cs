@@ -14,6 +14,8 @@ public class Eagle : MonoBehaviour
     public enum E_AI_STATE {NONE = -1, TRACKING, RETRUN, PATOL }
     public E_AI_STATE curState = E_AI_STATE.NONE;
 
+    public LayerMask attacklayerMask;
+
     public void SetAIState(E_AI_STATE state)
     {
         if (curState == state) return;
@@ -139,16 +141,21 @@ public class Eagle : MonoBehaviour
     private void FixedUpdate()
     {
         FindProcess();
+
+        ProcessAttack(); 
     }
 
     // Update is called once per frame
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    void ProcessAttack()
     {
-        //Debug.Log("OnTriggerEnter2D:"+collision.gameObject.name);
-        if (collision.gameObject.tag == "Player")
+        CircleCollider2D circleCollider2D = GetComponent<CircleCollider2D>();
+        Vector2 vPos = (Vector2)transform.position + circleCollider2D.offset;
+        Collider2D collider = Physics2D.OverlapCircle(transform.position, circleCollider2D.radius, attacklayerMask);
+
+        if (collider)
         {
-            Player target = collision.gameObject.GetComponent<Player>();
+            Player target = collider.gameObject.GetComponent<Player>();
             Player attaker = this.gameObject.GetComponent<Player>();
             SuperMode superMode = target.GetComponent<SuperMode>();
 
@@ -158,6 +165,16 @@ public class Eagle : MonoBehaviour
                 superMode.OnMode();
             }
             //Destroy(collision.gameObject);
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        //Debug.Log("OnTriggerEnter2D:"+collision.gameObject.name);
+        if (collision.gameObject.tag == "Player")
+        {
+            objTarget = collision.gameObject;
+            ProcessAttack();
         }
     }
 }
