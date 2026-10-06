@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,10 +35,17 @@ public static class LegacyGUI
     }
 
     /// <summary>
-    /// 레벨업 3택 선택 팝업창 오픈 요청
+    /// 레벨업 3택 선택 팝업창 오픈 요청 (UGUI 우선 호출, 레거시 폴백)
     /// </summary>
     public static void ShowLevelUp(List<ItemInfo> choices, Action<ItemInfo> onSelected)
     {
+        var gm = GameManager.GetInstacne();
+        if (gm != null && gm.guiManager != null && gm.guiManager.popupLayer != null && gm.guiManager.popupLayer.guiLevelUp != null)
+        {
+            gm.guiManager.popupLayer.OpenLevelUp(choices, onSelected);
+            return;
+        }
+
         LegacyGUIRenderer.Instance.OpenLevelUpPopup(choices, onSelected);
     }
 
@@ -67,16 +74,16 @@ public class LegacyGUIRenderer : MonoBehaviour
     private static LegacyGUIRenderer _instance;
     public static LegacyGUIRenderer Instance
     {
-        get
+        get //인스턴스가 없다면 만들고, 있다면 그대로 인스턴스의 참조값을 반환한다.
         {
-            if (_instance == null)
+            if (_instance == null)//인스턴스가 널이 일때,
             {
-                _instance = FindFirstObjectByType<LegacyGUIRenderer>();
-                if (_instance == null)
+                _instance = FindFirstObjectByType<LegacyGUIRenderer>(); //씬안에 이 클래스를 가진 오브젝트를 찾는다.
+                if (_instance == null) //인스턴스가 널일 일때, 
                 {
-                    GameObject go = new GameObject("@LegacyGUIRenderer");
-                    _instance = go.AddComponent<LegacyGUIRenderer>();
-                    DontDestroyOnLoad(go);
+                    GameObject go = new GameObject("@LegacyGUIRenderer");//게임오브젝를 이름을 지정하여 만든다.
+                    _instance = go.AddComponent<LegacyGUIRenderer>(); //만든 게임오브젝트에 이 클래스를 컴포넌트로 붙이고, 이 컴포넌트의 인스턴스의 참조값을 저장한다.
+                    DontDestroyOnLoad(go);//하지마 삭제를 [씬을] 로드할때 ()에 있는 오브젝트를
                 }
             }
             return _instance;

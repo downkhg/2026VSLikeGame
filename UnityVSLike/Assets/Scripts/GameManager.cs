@@ -19,7 +19,21 @@ public class GameManager : MonoBehaviour
 
     private void Awake()
     {
+        Debug.Log($"[GameManager] Awake() - Legacy GUI {(enableLegacyGUI ? "활성화 (ON)" : "비활성화 (OFF)")}");
         instance = this;
+        guiManager.Initialize(this);
+        LegacyGUI.IsEnabled = enableLegacyGUI;
+    }
+
+    private void Start()
+    {
+        Debug.Log($"[GameManager] Start() - Legacy GUI {(enableLegacyGUI ? "활성화 (ON)" : "비활성화 (OFF)")}");
+        EventShowMeTheItem();
+    }
+
+    private void OnValidate()
+    {
+        LegacyGUI.IsEnabled = enableLegacyGUI;
     }
 
     [SerializeField]
@@ -35,11 +49,11 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void EventShowMeTheItem()
+    public void EventShowMeTheItem(int count = 1)
     {
         if (monsterInventory == null) return;
 
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < count; i++)
         {
             monsterInventory.AddMonster("fox");
             monsterInventory.AddMonster("frog");
@@ -270,7 +284,8 @@ public class GameManager : MonoBehaviour
 
     private void OnGUI()
     {
-        if (!showVersionGUI) return;
+        // 레거시 GUI 전체가 꺼져있거나 버전 GUI가 비활성화된 경우 렌더링하지 않음
+        if (!enableLegacyGUI || !showVersionGUI) return;
 
         // 1. 우측 상단 버전 표시 박스
         int width = 220;

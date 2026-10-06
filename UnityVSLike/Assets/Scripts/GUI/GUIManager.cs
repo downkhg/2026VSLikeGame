@@ -1,20 +1,40 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GUIManager : MonoBehaviour
 {
     public GameObject objPopupLayer;
     public GUIInventory guiInventory;
-
+    public GUIPopupLayer popupLayer;
 
     public enum E_GUI_STATUS { TITILE, GAMEOVER, THEEND, PLAY }
     public List<GameObject> listGUIScence;
     public E_GUI_STATUS curGUIStatus;
 
+    private void Awake()
+    {
+        Debug.Log("GUIManager.Awake()");
+        if (popupLayer == null && objPopupLayer != null)
+        {
+            popupLayer = objPopupLayer.GetComponent<GUIPopupLayer>();
+            if (popupLayer == null)
+            {
+                popupLayer = objPopupLayer.AddComponent<GUIPopupLayer>();
+                popupLayer.guiInventory = guiInventory;
+            }
+        }
+
+        if (listGUIScence == null || listGUIScence.Count == 0)
+        {
+            Debug.LogError("GUIManager: listGUIScence is not set or empty.");
+            return;
+        }
+        ShowGUIScence(-1); // Hide all GUI scenes initially
+    }
+
     private void Start()
     {
-        
-
+        Debug.Log("GUIManager.Start()");
         SetGUIStatus(curGUIStatus);
     }
 
@@ -46,6 +66,7 @@ public class GUIManager : MonoBehaviour
 
     public void SetGUIStatus(E_GUI_STATUS status)
     {
+        Debug.Log($@"GUIManager.SetGUIStatus(""{status.ToString()}"")");
         switch (status)
         {
             case E_GUI_STATUS.TITILE:
@@ -58,7 +79,7 @@ public class GUIManager : MonoBehaviour
                 Time.timeScale = 0;
                 break;
             case E_GUI_STATUS.PLAY:
-                Time.timeScale = 1;
+                Time.timeScale = (popupLayer != null && popupLayer.IsPopupOpen()) ? 0 : 1;
                 break;
         }
         curGUIStatus = status;
@@ -76,43 +97,86 @@ public class GUIManager : MonoBehaviour
             case E_GUI_STATUS.THEEND:
                 break;
             case E_GUI_STATUS.PLAY:
-                if (gameManager != null)
+                if (gameManager != null && gameManager.responnerPlayer != null && gameManager.responnerPlayer.objPlayer == null)
                 {
                     SetGUIStatus(E_GUI_STATUS.GAMEOVER);
                     gameManager.EventGameOverProcess();
                 }
                 EventInventoryInput();
+                EventTroubleshootingInput();
                 break;
         }
     }
 
     public void PopupLayerShow(bool active)
     {
-        if (guiInventory != null)
+        Debug.Log($@"GUIManager.PopupLayerShow({active})");
+        if (popupLayer != null)
         {
             if (active)
-                guiInventory.SetInventory(gameManager.monsterInventory);
+            {
+                popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY, gameManager?.monsterInventory);
+            }
             else
-                guiInventory.CloseIventory();
+            {
+                popupLayer.CloseCurrentPopup();
+            }
         }
+        else
+        {
+            if (guiInventory != null)
+            {
+                if (active)
+                    guiInventory.SetInventory(gameManager?.monsterInventory);
+                else
+                    guiInventory.CloseIventory();
+            }
 
-        if (objPopupLayer != null)
-            objPopupLayer.SetActive(active);
+            if (objPopupLayer != null)
+                objPopupLayer.SetActive(active);
+        }
     }
 
     public void EventInventoryInput()
     {
-        if (objPopupLayer == null) return;
-
         if (Input.GetKeyDown(KeyCode.I))
         {
-            if (objPopupLayer.activeSelf)
+            if (popupLayer != null)
             {
-                PopupLayerShow(false);
+                if (popupLayer.curPopupState == E_POPUP_STATE.INVENTORY)
+                {
+                    popupLayer.CloseCurrentPopup();
+                }
+                else
+                {
+                    popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY, gameManager?.monsterInventory);
+                }
             }
-            else
+            else if (objPopupLayer != null)
             {
-                PopupLayerShow(true);
+                PopupLayerShow(!objPopupLayer.activeSelf);
+            }
+        }
+    }
+
+    public void EventTroubleshootingInput()
+    {
+        if (Input.GetKeyDown(KeyCode.F1))
+        {
+            // 레거시 GUI가 꺼져있는 경우 UGUI 팝업으로 표시
+            if (gameManager != null && !gameManager.enableLegacyGUI)
+            {
+                if (popupLayer != null)
+                {
+                    if (popupLayer.curPopupState == E_POPUP_STATE.TROUBLESHOOTING)
+                    {
+                        popupLayer.CloseCurrentPopup();
+                    }
+                    else
+                    {
+                        popupLayer.SetPopupState(E_POPUP_STATE.TROUBLESHOOTING, gameManager.troubleshootingList);
+                    }
+                }
             }
         }
     }
