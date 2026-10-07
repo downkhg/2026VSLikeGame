@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -162,10 +162,20 @@ public class GunInventory : MonoBehaviour
             return;
         }
 
-        LegacyGUI.ShowLevelUp(currentChoices, (selectedInfo) =>
+        //LegacyGUI.ShowLevelUp(currentChoices, (selectedInfo) =>
+        //{
+        //    AddGun(selectedInfo);
+        //});
+
+       LegacyGUI.ShowLevelUp(currentChoices, EventLevelUpItemSelected); 
+    }
+
+    public void EventLevelUpItemSelected(ItemInfo selectedInfo)
+    {
+        if (selectedInfo != null)
         {
             AddGun(selectedInfo);
-        });
+        }
     }
 
     /// <summary>

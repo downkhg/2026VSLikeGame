@@ -1,5 +1,6 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GUIManager : MonoBehaviour
 {
@@ -44,8 +45,14 @@ public class GUIManager : MonoBehaviour
     {
         _gameManager.EventShowMeTheItem();
 
-        if (guiInventory != null)
+        if (popupLayer != null)
+        {
+            popupLayer.Initialize(_gameManager);
+        }
+        else if (guiInventory != null)
+        {
             guiInventory.SetInventory(_gameManager.monsterInventory);
+        }
 
         this.gameManager = _gameManager;
     }
@@ -104,6 +111,21 @@ public class GUIManager : MonoBehaviour
                 }
                 EventInventoryInput();
                 EventTroubleshootingInput();
+
+                if (Input.GetKeyDown(KeyCode.G))
+                {
+                    if (popupLayer != null)
+                    {
+                        if (popupLayer.curPopupState == E_POPUP_STATE.GUN_STATUS)
+                        {
+                            popupLayer.CloseCurrentPopup();
+                        }
+                        else
+                        {
+                            popupLayer.SetPopupState(E_POPUP_STATE.GUN_STATUS);
+                        }
+                    }
+                }
                 break;
         }
     }
@@ -115,7 +137,7 @@ public class GUIManager : MonoBehaviour
         {
             if (active)
             {
-                popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY, gameManager?.monsterInventory);
+                popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY);
             }
             else
             {
@@ -149,7 +171,7 @@ public class GUIManager : MonoBehaviour
                 }
                 else
                 {
-                    popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY, gameManager?.monsterInventory);
+                    popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY);
                 }
             }
             else if (objPopupLayer != null)
@@ -174,7 +196,7 @@ public class GUIManager : MonoBehaviour
                     }
                     else
                     {
-                        popupLayer.SetPopupState(E_POPUP_STATE.TROUBLESHOOTING, gameManager.troubleshootingList);
+                        popupLayer.SetPopupState(E_POPUP_STATE.TROUBLESHOOTING);
                     }
                 }
             }
@@ -200,5 +222,19 @@ public class GUIManager : MonoBehaviour
     {
         Debug.Log("GUIManager.EventExit()");
         Application.Quit();
+    }
+
+    public Button tilteEndButton;
+
+    public void SetTitleButtonEvet()
+    {
+        if (tilteEndButton != null)
+        {
+            tilteEndButton.onClick.AddListener(() =>
+            {
+                Debug.Log("GUIInventory: Title Button Clicked");
+                EventStart();
+            });
+        }
     }
 }

@@ -65,6 +65,7 @@
     <Compile Include="Assets\Scripts\Guns\DefaultGun.cs" />
     <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
+    <Compile Include="Assets\Scripts\GUI\UIGunStatusPopup.cs" />
     <Compile Include="Assets\Scripts\ItemInfoManager.cs" />
     <Compile Include="Assets\Scripts\Guns\GunType.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
@@ -73,6 +74,7 @@
     <Compile Include="Assets\Scripts\Bullet\Bullet.cs" />
     <Compile Include="Assets\Scripts\GUI\GUIPopupLayer.cs" />
     <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
+    <Compile Include="Assets\Scripts\GUI\UIGunSlotButton.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
     <Compile Include="Assets\Scripts\Guns\SoccerGun.cs" />
     <Compile Include="Assets\Scripts\Bullet\ExplosionEffect.cs" />
