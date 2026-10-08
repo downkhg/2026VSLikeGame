@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -110,22 +110,8 @@ public class GUIManager : MonoBehaviour
                     gameManager.EventGameOverProcess();
                 }
                 EventInventoryInput();
+                EventGunStatusInput();
                 EventTroubleshootingInput();
-
-                if (Input.GetKeyDown(KeyCode.G))
-                {
-                    if (popupLayer != null)
-                    {
-                        if (popupLayer.curPopupState == E_POPUP_STATE.GUN_STATUS)
-                        {
-                            popupLayer.CloseCurrentPopup();
-                        }
-                        else
-                        {
-                            popupLayer.SetPopupState(E_POPUP_STATE.GUN_STATUS);
-                        }
-                    }
-                }
                 break;
         }
     }
@@ -172,6 +158,29 @@ public class GUIManager : MonoBehaviour
                 else
                 {
                     popupLayer.SetPopupState(E_POPUP_STATE.INVENTORY);
+                }
+            }
+            else if (objPopupLayer != null)
+            {
+                PopupLayerShow(!objPopupLayer.activeSelf);
+            }
+        }
+    }
+
+    public void EventGunStatusInput()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            Debug.Log("GUIManager: EventGunStatusInput() - G Key Pressed");
+            if (popupLayer != null)
+            {
+                if (popupLayer.curPopupState == E_POPUP_STATE.GUN_STATUS)
+                {
+                    popupLayer.CloseCurrentPopup();
+                }
+                else
+                {
+                    popupLayer.SetPopupState(E_POPUP_STATE.GUN_STATUS);
                 }
             }
             else if (objPopupLayer != null)

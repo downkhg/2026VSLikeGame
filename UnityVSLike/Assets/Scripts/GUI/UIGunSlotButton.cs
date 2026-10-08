@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -67,6 +67,7 @@ public class UIGunSlotButton : MonoBehaviour, IPointerEnterHandler
     {
         if (onSelectCallback != null)
         {
+            Debug.Log($"UIGunSlotButton: OnPointerEnter - {gunType}");
             onSelectCallback.Invoke(gunType);
         }
     }

@@ -31,7 +31,20 @@ public class UIGunStatusPopup : MonoBehaviour
     {
         if (buttonClose != null)
         {
-            buttonClose.onClick.AddListener(Close);
+            buttonClose.onClick.AddListener(OnClickCloseButton);
+        }
+    }
+
+    private void OnClickCloseButton()
+    {
+        GUIPopupLayer popupLayer = GetComponentInParent<GUIPopupLayer>();
+        if (popupLayer != null)
+        {
+            popupLayer.CloseCurrentPopup();
+        }
+        else
+        {
+            Close();
         }
     }
 
@@ -229,12 +242,6 @@ public class UIGunStatusPopup : MonoBehaviour
     {
         ClearSpawnedButtons();
         gameObject.SetActive(false);
-
-        GUIPopupLayer popupLayer = GetComponentInParent<GUIPopupLayer>();
-        if (popupLayer != null && popupLayer.curPopupState == E_POPUP_STATE.GUN_STATUS)
-        {
-            popupLayer.CloseCurrentPopup();
-        }
     }
 
     private void ClearSpawnedButtons()

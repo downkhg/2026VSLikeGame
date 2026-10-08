@@ -18,7 +18,20 @@ public class UITroubleshootingPopup : MonoBehaviour
     {
         if (buttonClose != null)
         {
-            buttonClose.onClick.AddListener(Close);
+            buttonClose.onClick.AddListener(OnClickCloseButton);
+        }
+    }
+
+    private void OnClickCloseButton()
+    {
+        GUIPopupLayer popupLayer = GetComponentInParent<GUIPopupLayer>();
+        if (popupLayer != null)
+        {
+            popupLayer.CloseCurrentPopup();
+        }
+        else
+        {
+            Close();
         }
     }
 
@@ -52,13 +65,6 @@ public class UITroubleshootingPopup : MonoBehaviour
     {
         ClearEntries();
         gameObject.SetActive(false);
-
-        // 상위 PopupLayer가 관리 중이라면 닫기 상태 동기화
-        GUIPopupLayer popupLayer = GetComponentInParent<GUIPopupLayer>();
-        if (popupLayer != null && popupLayer.curPopupState == E_POPUP_STATE.TROUBLESHOOTING)
-        {
-            popupLayer.CloseCurrentPopup();
-        }
     }
 
     private void ClearEntries()
