@@ -25,7 +25,11 @@ public class KunaiGun : BaseGun
 
         Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
         Vector3 spawnPos = GetSpawnPosition();
-        Vector2 finalDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - spawnPos).normalized : (Vector2)dir;
+        Vector2 finalDir = (Vector2)dir;
+        if (nearestEnemy != null)
+        {
+            finalDir = (Vector2)(nearestEnemy.position - spawnPos).normalized;
+        }
 
         GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();

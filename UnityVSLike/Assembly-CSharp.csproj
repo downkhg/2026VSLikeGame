@@ -66,6 +66,7 @@
     <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
     <Compile Include="Assets\Scripts\GUI\UIGunStatusPopup.cs" />
+    <Compile Include="Assets\Scripts\RepositionGrid.cs" />
     <Compile Include="Assets\Scripts\ItemInfoManager.cs" />
     <Compile Include="Assets\Scripts\Guns\GunType.cs" />
     <Compile Include="Assets\Scripts\Opossum.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Assets\Scripts\GUI\UILevelUpCard.cs" />
     <Compile Include="Assets\Scripts\BatSwing.cs" />
     <Compile Include="Assets\Scripts\SuperMode.cs" />
+    <Compile Include="Assets\Scripts\InfiniteGridManager.cs" />
     <Compile Include="Assets\Scripts\Player.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\GUI\UILevelUpPopup.cs" />

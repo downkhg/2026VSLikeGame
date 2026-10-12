@@ -235,12 +235,21 @@ public class TotalGun : BaseGun
     private void ShotDefault(Vector3 dir)
     {
         if (prefabBullet == null) return;
+
+        // 바라보는 방향과 상관없이 타겟팅된 적이 있다면 타겟 방향으로 조준
+        Transform target = FindNearestEnemy(transform.position, searchRadius);
         Vector3 spawnPos = GetSpawnPosition(dir);
+        Vector3 finalDir = dir;
+        if (target != null)
+        {
+            finalDir = (target.position - spawnPos).normalized;
+        }
+
         GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
         if (bullet != null)
         {
-            bullet.Init(dir, master, shotPower);
+            bullet.Init(finalDir, master, shotPower);
         }
     }
 
@@ -249,7 +258,11 @@ public class TotalGun : BaseGun
         if (prefabBullet == null) return;
         Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
         Vector3 spawnPos = GetSpawnPosition();
-        Vector2 finalDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - spawnPos).normalized : (Vector2)dir;
+        Vector2 finalDir = (Vector2)dir;
+        if (nearestEnemy != null)
+        {
+            finalDir = (Vector2)(nearestEnemy.position - spawnPos).normalized;
+        }
 
         GameObject copyBullet = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         Bullet bullet = copyBullet.GetComponent<Bullet>();
@@ -263,18 +276,14 @@ public class TotalGun : BaseGun
     {
         if (prefabBullet == null) return;
 
+        // 바라보는 방향과 상관없이 타겟팅된 적이 있다면 타겟 방향을 기준 각도로 설정
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
         if (shotgunCurrentTarget != null)
         {
-            Vector3 targetDist = shotgunCurrentTarget.position - transform.position;
-            Vector2 targetDir = targetDist.normalized;
-            shotgunAngleDifference = Vector2.Angle(dir, targetDir);
-
-            if (shotgunAngleDifference <= shotgunSpreadAngle / 2f)
-            {
-                baseAngle = Mathf.Atan2(targetDir.y, targetDir.x) * Mathf.Rad2Deg;
-            }
+            Vector3 spawnPosition = GetSpawnPosition();
+            Vector2 targetDir = ((Vector2)shotgunCurrentTarget.position - (Vector2)spawnPosition).normalized;
+            baseAngle = Mathf.Atan2(targetDir.y, targetDir.x) * Mathf.Rad2Deg;
         }
 
         float halfSpread = shotgunSpreadAngle / 2f;
@@ -304,7 +313,11 @@ public class TotalGun : BaseGun
 
         Vector3 launchPosition = GetSpawnPosition();
         Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
-        Vector2 launchDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - launchPosition).normalized : (Vector2)dir;
+        Vector2 launchDir = (Vector2)dir;
+        if (nearestEnemy != null)
+        {
+            launchDir = (Vector2)(nearestEnemy.position - launchPosition).normalized;
+        }
 
         GameObject rocketObj = Instantiate(prefabBullet, launchPosition, Quaternion.identity);
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();
@@ -320,7 +333,11 @@ public class TotalGun : BaseGun
 
         Vector3 spawnPos = GetSpawnPosition();
         Transform target = FindNearestEnemy(transform.position, searchRadius);
-        Vector2 finalDir = target != null ? (Vector2)(target.position - spawnPos).normalized : (Vector2)dir;
+        Vector2 finalDir = (Vector2)dir;
+        if (target != null)
+        {
+            finalDir = (Vector2)(target.position - spawnPos).normalized;
+        }
 
         GameObject soccerObj = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();

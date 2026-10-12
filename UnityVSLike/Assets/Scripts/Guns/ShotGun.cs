@@ -46,18 +46,14 @@ public class ShotGun : BaseGun
 
         UpdateTarget();
 
+        // 바라보는 방향과 상관없이 타겟팅된 적이 있다면 타겟 방향을 기준 각도로 설정
         float baseAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
 
         if (currentTarget != null)
         {
-            Vector3 targetDist = currentTarget.position - transform.position;
-            Vector2 targetDir = targetDist.normalized;
-            angleDifference = Vector2.Angle(dir, targetDir);
-
-            if (angleDifference <= spreadAngle / 2f)
-            {
-                baseAngle = Mathf.Atan2(targetDir.y, targetDir.x) * Mathf.Rad2Deg;
-            }
+            Vector3 spawnPosition = GetSpawnPosition();
+            Vector2 targetDir = ((Vector2)currentTarget.position - (Vector2)spawnPosition).normalized;
+            baseAngle = Mathf.Atan2(targetDir.y, targetDir.x) * Mathf.Rad2Deg;
         }
 
         float halfSpread = spreadAngle / 2f;

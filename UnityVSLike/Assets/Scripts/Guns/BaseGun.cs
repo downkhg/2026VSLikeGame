@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -45,7 +45,12 @@ public abstract class BaseGun : MonoBehaviour
 
         if (monsterLayer == 0)
         {
-            monsterLayer = 1 << LayerMask.NameToLayer("Monster");
+            int monsterIdx = LayerMask.NameToLayer("Monster");
+            int airIdx = LayerMask.NameToLayer("Air");
+            LayerMask mask = 0;
+            if (monsterIdx != -1) mask |= (1 << monsterIdx);
+            if (airIdx != -1) mask |= (1 << airIdx);
+            monsterLayer = mask;
         }
 
         InitFirePoint();
@@ -78,8 +83,17 @@ public abstract class BaseGun : MonoBehaviour
             if (fireTimer >= fireInterval)
             {
                 fireTimer = 0f;
-                // 다형성(Polymorphism): 자식 클래스에서 오버라이드한 Shot()이 가상함수 테이블을 통해 호출됨
-                Shot(GetPlayerFacingDirection());
+
+                // 바라보는 방향과 상관없이 타겟팅된 적이 있다면 타겟 방향으로, 없다면 플레이어가 바라보는 방향으로 발사
+                Vector3 fireDir = (Vector3)GetPlayerFacingDirection();
+                Transform target = FindNearestEnemy(transform.position, searchRadius);
+                if (target != null)
+                {
+                    Vector3 spawnPos = GetSpawnPosition();
+                    fireDir = (target.position - spawnPos).normalized;
+                }
+
+                Shot(fireDir);
             }
         }
     }
@@ -106,11 +120,18 @@ public abstract class BaseGun : MonoBehaviour
     /// <summary>
     /// 쿨타임(fireInterval) 대기 없이 즉각적으로 격발하는 액티브 발사 메서드
     /// </summary>
-    /// <param name="dir">발사 방향 벡터</param>
+    /// <param name="dir">발사 기본 방향 벡터 (타겟팅된 적이 있다면 타겟 방향으로 우선 발사)</param>
     public virtual void ActiveShot(Vector3 dir)
     {
-        // 쿨타임 타이머와 상관없이 즉각 Shot() 실행
-        Shot(dir);
+        Vector3 fireDir = dir;
+        Transform target = FindNearestEnemy(transform.position, searchRadius);
+        if (target != null)
+        {
+            Vector3 spawnPos = GetSpawnPosition();
+            fireDir = (target.position - spawnPos).normalized;
+        }
+
+        Shot(fireDir);
     }
 
     /// <summary>
@@ -233,21 +254,49 @@ public abstract class BaseGun : MonoBehaviour
 
     public virtual Transform FindNearestEnemy(Vector3 origin, float radius)
     {
+        // 1. 지정된 몬스터 레이어로 탐색
         Collider2D[] enemies = Physics2D.OverlapCircleAll(origin, radius, monsterLayer);
-        if (enemies.Length == 0) return null;
+
+        // 2. 만약 레이어로 검출되지 않았다면 반경 내 전체 콜라이더 중 Monster 태그 검사 (Fallback)
+        if (enemies == null || enemies.Length == 0)
+        {
+            enemies = Physics2D.OverlapCircleAll(origin, radius);
+        }
+
+        if (enemies == null || enemies.Length == 0) return null;
 
         Transform nearest = null;
         float minDistance = float.MaxValue;
 
-        foreach (Collider2D enemy in enemies)
+        for (int i = 0; i < enemies.Length; i++)
         {
+            Collider2D enemy = enemies[i];
             if (enemy == null || !enemy.gameObject.activeInHierarchy) continue;
 
-            float dist = Vector3.Distance(origin, enemy.transform.position);
-            if (dist < minDistance && dist <= radius)
+            // 본인(플레이어) 또는 Player 태그는 제외
+            if (enemy.CompareTag("Player") || (master != null && enemy.gameObject == master.gameObject))
             {
-                minDistance = dist;
-                nearest = enemy.transform;
+                continue;
+            }
+
+            // 몬스터 여부 확인 (태그가 Monster이거나 레이어가 monsterLayer에 포함되거나 부모가 Monster 태그인 경우)
+            bool isMonster = enemy.CompareTag("Monster") || ((1 << enemy.gameObject.layer) & monsterLayer) != 0;
+            if (!isMonster && enemy.transform.parent != null)
+            {
+                if (enemy.transform.parent.CompareTag("Monster"))
+                {
+                    isMonster = true;
+                }
+            }
+
+            if (isMonster)
+            {
+                float dist = Vector3.Distance(origin, enemy.transform.position);
+                if (dist < minDistance && dist <= radius)
+                {
+                    minDistance = dist;
+                    nearest = enemy.transform;
+                }
             }
         }
 

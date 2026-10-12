@@ -32,7 +32,11 @@ public class SoccerGun : BaseGun
 
         Vector3 spawnPos = GetSpawnPosition();
         Transform target = FindNearestEnemy(transform.position, searchRadius);
-        Vector2 finalDir = target != null ? (Vector2)(target.position - spawnPos).normalized : (Vector2)dir;
+        Vector2 finalDir = (Vector2)dir;
+        if (target != null)
+        {
+            finalDir = (Vector2)(target.position - spawnPos).normalized;
+        }
 
         GameObject soccerObj = Instantiate(prefabBullet, spawnPos, Quaternion.identity);
         SoccerBullet bullet = soccerObj.GetComponent<SoccerBullet>();

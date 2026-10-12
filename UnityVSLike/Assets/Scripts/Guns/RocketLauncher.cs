@@ -38,7 +38,11 @@ public class RocketLauncher : BaseGun
 
         Vector3 launchPosition = GetSpawnPosition();
         Transform nearestEnemy = FindNearestEnemy(transform.position, searchRadius);
-        Vector2 launchDir = nearestEnemy != null ? (Vector2)(nearestEnemy.position - launchPosition).normalized : (Vector2)dir;
+        Vector2 launchDir = (Vector2)dir;
+        if (nearestEnemy != null)
+        {
+            launchDir = (Vector2)(nearestEnemy.position - launchPosition).normalized;
+        }
 
         GameObject rocketObj = Instantiate(prefabBullet, launchPosition, Quaternion.identity);
         Bullet bulletScript = rocketObj.GetComponent<Bullet>();

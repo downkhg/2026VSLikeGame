@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,6 +29,17 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log($"[GameManager] Start() - Legacy GUI {(enableLegacyGUI ? "활성화 (ON)" : "비활성화 (OFF)")}");
         EventShowMeTheItem();
+
+        // 무한 맵 매니저가 씬에 없으면 자동 생성하여 Grid00 무한 맵 활성화
+        if (infiniteGridManager == null)
+        {
+            infiniteGridManager = FindFirstObjectByType<InfiniteGridManager>();
+            if (infiniteGridManager == null)
+            {
+                GameObject gridMgrObj = new GameObject("@InfiniteGridManager");
+                infiniteGridManager = gridMgrObj.AddComponent<InfiniteGridManager>();
+            }
+        }
     }
 
     private void OnValidate()
@@ -94,10 +105,13 @@ public class GameManager : MonoBehaviour
 
     public GUIPlayerInfo guiPlayerInfo;
 
+    [Header("무한 맵 매니저")]
+    public InfiniteGridManager infiniteGridManager;
+
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 10;
+    public int patchVersion = 11;
 
     [Header("Legacy GUI (OnGUI) 테스트 On/Off 설정")]
     public bool enableLegacyGUI = true;
@@ -231,6 +245,16 @@ public class GameManager : MonoBehaviour
             description = "개별 컴포넌트에 분산되어 있던 레거시 GUI(OnGUI) 렌더링을 정적 클래스(LegacyGUI) 호출 구조로 일원화하고, GameManager에 런타임 On/Off 토글 기능 추가",
             cause = "Dynamic, GunInventory, MonsterInventory 등에 OnGUI 및 GUIStyle 코드가 분산되어 유지보수성과 확장성이 저하되고 테스트 시 UI 숨김 기능이 부재함",
             solution = "LegacyGUI 정적 파사드 및 LegacyGUIRenderer 중앙 렌더러를 구축하여 단일 OnGUI로 통합하고, GameManager에 enableLegacyGUI 인스펙터 필드 및 F2 토글 단축키를 추가함"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "시스템",
+            foundVersion = "0.00.10",
+            status = "수정완료",
+            appliedVersion = "0.00.11",
+            description = "Grid00 타일맵을 활용하여 캐릭터 이동 시 바닥 타일이 재배치되어 무한 맵으로 보이도록 하는 뱀서라이크 무한 배경 시스템 구현",
+            cause = "고정된 배경으로 인해 뱀서라이크 형태의 자유로운 무한 이동이 불가능하고 맵 경계 밖으로 벗어나는 문제",
+            solution = "RepositionGrid 컴포넌트 및 InfiniteGridManager를 구현하여 플레이어 이동 거리에 따라 3x3 격자 타일이 진행 방향으로 자동 순환 텔레포트(재배치)되도록 구현"
         }
     };
 
