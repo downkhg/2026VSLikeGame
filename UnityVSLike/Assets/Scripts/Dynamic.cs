@@ -34,6 +34,17 @@ public class Dynamic : MonoBehaviour
             // 설정된 액티브 무기는 자동 발사를 끄고 수동 액티브 전용으로 전환
             gun.isAutoFire = false;
         }
+
+        // VSLike 씬(탑다운 모드)인 경우 중력 영향을 받지 않도록 Rigidbody2D의 gravityScale을 0으로 설정
+        Rigidbody2D rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            string currentSceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (currentSceneName == "VSLike")
+            {
+                rb.gravityScale = 0f;
+            }
+        }
     }
 
     private void Start()
@@ -120,35 +131,45 @@ public class Dynamic : MonoBehaviour
         // 1. 숫자키 (1~7): 액티브 무기 실시간 변경
         HandleWeaponSwitchInput();
 
-        // 2. 이동 조작
-        if (Input.GetKey(KeyCode.RightArrow))
+        // 2. 이동 조작 (상, 하, 좌, 우 이동)
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
             transform.position += Vector3.right * Speed * Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0, 0, 0);
             dir = Vector3.right;
         }
 
-        if (Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
         {
             transform.position += Vector3.left * Speed * Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0, 180, 0);
             dir = Vector3.left;
         }
 
-        if (Input.GetKey(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
         {
-            //transform.position += Vector3.down * Time.deltaTime;
+            transform.position += Vector3.up * Speed * Time.deltaTime;
+            dir = Vector3.up;
         }
 
-        // 3. 점프 조작
+        if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
+        {
+            transform.position += Vector3.down * Speed * Time.deltaTime;
+            dir = Vector3.down;
+        }
+
+        // 3. 점프 조작 (중력이 적용되는 플랫폼 모드 씬에서만 점프 가능)
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (isJump == false)
+            Rigidbody2D rigidbody2D = this.gameObject.GetComponent<Rigidbody2D>();
+            if (rigidbody2D != null && rigidbody2D.gravityScale > 0)
             {
-                Rigidbody2D rigidbody2D = this.gameObject.GetComponent<Rigidbody2D>();
-                rigidbody2D.AddForce(Vector3.up * JumpPower);
-                isJump = true;
-                GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;
+                if (isJump == false)
+                {
+                    rigidbody2D.AddForce(Vector3.up * JumpPower);
+                    isJump = true;
+                    rigidbody2D.linearVelocity = Vector2.zero;
+                }
             }
         }
 
