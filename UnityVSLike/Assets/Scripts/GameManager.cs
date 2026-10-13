@@ -111,7 +111,7 @@ public class GameManager : MonoBehaviour
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 11;
+    public int patchVersion = 12;
 
     [Header("Legacy GUI (OnGUI) 테스트 On/Off 설정")]
     public bool enableLegacyGUI = true;
@@ -255,6 +255,16 @@ public class GameManager : MonoBehaviour
             description = "Grid00 타일맵을 활용하여 캐릭터 이동 시 바닥 타일이 재배치되어 무한 맵으로 보이도록 하는 뱀서라이크 무한 배경 시스템 구현",
             cause = "고정된 배경으로 인해 뱀서라이크 형태의 자유로운 무한 이동이 불가능하고 맵 경계 밖으로 벗어나는 문제",
             solution = "RepositionGrid 컴포넌트 및 InfiniteGridManager를 구현하여 플레이어 이동 거리에 따라 3x3 격자 타일이 진행 방향으로 자동 순환 텔레포트(재배치)되도록 구현"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "버그",
+            foundVersion = "0.00.11",
+            status = "수정완료",
+            appliedVersion = "0.00.12",
+            description = "Grid00 무한 맵 타일 크기 불일치(실제 2.08x2.08 vs 3.04x2.88)로 인해 타일 사이에 틈새(공백) 발생 및 기즈모 오프셋 어긋남 문제",
+            cause = "Tilemap 프리팹 애셋의 비압축 바운즈(19x18)를 사용하여 간격이 과대 계산되었고, 타일맵의 로컬 원점 오프셋(피벗)이 중앙이 아닌 좌하단에 위치하여 발생",
+            solution = "Tilemap.CompressBounds() 및 cellBounds를 통해 실제 그려진 타일 크기(13x13=2.08x2.08)를 자동 측정하고, localCenterOffset을 적용하여 타일 간 틈새 없는 완벽 밀착 및 기즈모/거리 판정 중심점 보정 구현"
         }
     };
 

@@ -5,7 +5,7 @@ using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Grid00 프리팹을 활용하여 플레이어 주변에 3x3 격자 타일을 생성하고,
-/// 무한 반복 맵을 관리하는 매니저 컴포넌트입니다.
+/// 무한 반복 맵을 빈틈없이 완벽하게 관리하는 매니저 컴포넌트입니다.
 /// </summary>
 public class InfiniteGridManager : MonoBehaviour
 {
@@ -19,9 +19,19 @@ public class InfiniteGridManager : MonoBehaviour
     [Header("=== 추적 대상 플레이어 ===")]
     public Transform playerTransform;
 
-    [Header("=== 타일 크기 설정 (Grid00 기준: 가로 3.04 x 세로 2.88) ===")]
-    public float tileWidth = 3.04f;
-    public float tileHeight = 2.88f;
+    [Header("=== 타일 크기 설정 (Grid00 실제 크기: 가로 2.08 x 세로 2.08) ===")]
+    [Tooltip("타일 1개의 가로 크기입니다. Grid00은 13칸 * 0.16 = 2.08 입니다.")]
+    public float tileWidth = 2.08f;
+    [Tooltip("타일 1개의 세로 크기입니다. Grid00은 13칸 * 0.16 = 2.08 입니다.")]
+    public float tileHeight = 2.08f;
+
+    [Header("=== 타일 그래픽 중심 오프셋 (Pivot 보정) ===")]
+    [Tooltip("타일맵이 오브젝트 원점(0,0)에서 어느 위치에 그려져 있는지 나타내는 중심 오프셋입니다.")]
+    public Vector3 localCenterOffset = new Vector3(1.04f, 1.04f, 0f);
+
+    [Header("=== 타일 스케일(배율) 설정 (기본: 1.0) ===")]
+    [Tooltip("타일의 전체 크기(배율)를 키우거나 줄이고 싶을 때 사용합니다. 1.0이면 원본 크기입니다.")]
+    public float tileScale = 1.0f;
 
     [Header("=== 격자 크기 (기본 가로 3 x 세로 3 = 9개) ===")]
     public int gridSizeX = 3;
@@ -61,10 +71,10 @@ public class InfiniteGridManager : MonoBehaviour
             }
         }
 
-        // 3. 프리팹으로부터 정확한 기본 타일 크기 산출
+        // 3. 실제 그려진 타일 크기 자동 측정
         if (gridPrefab != null)
         {
-            CalculatePrefabTileSize();
+            MeasureActualTileSize();
         }
         else
         {
@@ -148,47 +158,52 @@ public class InfiniteGridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 프리팹에 포함된 Grid 셀 크기(0.16)와 Tilemap 정보를 읽어 타일의 월드 가로/세로 크기를 계산합니다.
+    /// 임시 타일을 생성하여 Tilemap.CompressBounds()를 실행하고, 실제 그려진 정확한 타일 크기와 중심 오프셋을 측정합니다.
     /// </summary>
-    private void CalculatePrefabTileSize()
+    private void MeasureActualTileSize()
     {
-        Grid grid = gridPrefab.GetComponent<Grid>();
-        if (grid == null)
-        {
-            grid = gridPrefab.GetComponentInChildren<Grid>();
-        }
+        if (gridPrefab == null) return;
 
-        Vector3 cellSize = new Vector3(0.16f, 0.16f, 0f);
-        if (grid != null)
+        // 임시 오브젝트를 인스턴스화하여 정확한 타일 영역 측정
+        GameObject tempObj = Instantiate(gridPrefab, new Vector3(9999f, 9999f, 0f), Quaternion.identity);
+        Tilemap tilemap = tempObj.GetComponentInChildren<Tilemap>();
+        if (tilemap != null)
         {
-            cellSize = grid.cellSize;
-        }
+            tilemap.CompressBounds();
+            BoundsInt bounds = tilemap.cellBounds;
+            Vector3 cellSize = tilemap.cellSize;
 
-        Tilemap tilemap = gridPrefab.GetComponentInChildren<Tilemap>();
-        if (tilemap != null && tilemap.size.x > 0 && tilemap.size.y > 0)
-        {
-            tileWidth = tilemap.size.x * cellSize.x;
-            tileHeight = tilemap.size.y * cellSize.y;
-        }
+            if (bounds.size.x > 0 && bounds.size.y > 0)
+            {
+                tileWidth = bounds.size.x * cellSize.x;
+                tileHeight = bounds.size.y * cellSize.y;
 
-        // 안전 기본값 및 과대 보정 (Grid00: 19칸 * 0.16 = 3.04, 18칸 * 0.16 = 2.88)
-        if (tileWidth <= 0f || tileWidth > 10f)
-        {
-            tileWidth = 3.04f;
+                float centerX = (bounds.xMin + bounds.xMax) * 0.5f * cellSize.x;
+                float centerY = (bounds.yMin + bounds.yMax) * 0.5f * cellSize.y;
+                localCenterOffset = new Vector3(centerX, centerY, 0f);
+            }
         }
-        if (tileHeight <= 0f || tileHeight > 10f)
+        Destroy(tempObj);
+
+        // 안전 기본값 (Grid00 프리팹: 13칸 * 0.16 = 2.08)
+        if (tileWidth <= 0f)
         {
-            tileHeight = 2.88f;
+            tileWidth = 2.08f;
+        }
+        if (tileHeight <= 0f)
+        {
+            tileHeight = 2.08f;
         }
 
         if (showDebugLog)
         {
-            Debug.Log(string.Format("[InfiniteGridManager] 타일 기본 규격 설정 -> 가로너비: {0:F2}, 세로높이: {1:F2}", tileWidth, tileHeight));
+            Debug.Log(string.Format("[InfiniteGridManager] 📐 타일 규격 자동 측정 완료 -> 가로: {0:F2}, 세로: {1:F2}, 중심오프셋: {2}",
+                tileWidth, tileHeight, localCenterOffset));
         }
     }
 
     /// <summary>
-    /// 플레이어 시작 위치를 중심으로 3x3 격자 타일을 생성하고 재배치 컴포넌트를 연결합니다.
+    /// 플레이어 시작 위치를 중심으로 3x3 격자 타일을 틈새 없이 완벽하게 밀착 생성하고 재배치 컴포넌트를 연결합니다.
     /// </summary>
     public void InitializeInfiniteGrids()
     {
@@ -217,6 +232,16 @@ public class InfiniteGridManager : MonoBehaviour
         }
         activeGrids.Clear();
 
+        // 스케일 안전 보정
+        if (tileScale <= 0f)
+        {
+            tileScale = 1.0f;
+        }
+
+        float effectiveWidth = tileWidth * tileScale;
+        float effectiveHeight = tileHeight * tileScale;
+        Vector3 effectiveCenterOffset = localCenterOffset * tileScale;
+
         // 기준 시작 좌표 (플레이어 위치 또는 원점)
         Vector3 centerPosition = Vector3.zero;
         if (playerTransform != null)
@@ -229,7 +254,8 @@ public class InfiniteGridManager : MonoBehaviour
 
         if (showDebugLog)
         {
-            Debug.Log(string.Format("[InfiniteGridManager] 🛠️ {0}x{1} 무한 격자 타일 자동 생성 시작... (중심 좌표: {2})", gridSizeX, gridSizeY, centerPosition));
+            Debug.Log(string.Format("[InfiniteGridManager] 🛠️ {0}x{1} 무한 격자 타일 자동 밀착 생성 시작... (중심 좌표: {2}, 스케일: {3})",
+                gridSizeX, gridSizeY, centerPosition, tileScale));
         }
 
         // 3x3 (총 9개) 격자 생성: x(-1 ~ 1), y(-1 ~ 1)
@@ -237,12 +263,14 @@ public class InfiniteGridManager : MonoBehaviour
         {
             for (int x = -halfX; x <= halfX; x++)
             {
-                float posX = centerPosition.x + (x * tileWidth);
-                float posY = centerPosition.y + (y * tileHeight);
-                Vector3 spawnPosition = new Vector3(posX, posY, 0f);
+                // 타일의 실제 그래픽 중심이 정확히 (centerPosition + (x * width, y * height))에 오도록 스폰 좌표 계산
+                float targetCenterX = centerPosition.x + ((float)x * effectiveWidth);
+                float targetCenterY = centerPosition.y + ((float)y * effectiveHeight);
+                Vector3 spawnPosition = new Vector3(targetCenterX - effectiveCenterOffset.x, targetCenterY - effectiveCenterOffset.y, 0f);
 
                 GameObject newGrid = Instantiate(gridPrefab, spawnPosition, Quaternion.identity, this.transform);
                 newGrid.name = string.Format("Grid_{0}_{1}", x + halfX, y + halfY);
+                newGrid.transform.localScale = new Vector3(tileScale, tileScale, 1f);
 
                 // RepositionGrid 컴포넌트 부착 및 설정
                 RepositionGrid repositionComp = newGrid.GetComponent<RepositionGrid>();
@@ -252,8 +280,9 @@ public class InfiniteGridManager : MonoBehaviour
                 }
 
                 repositionComp.playerTransform = playerTransform;
-                repositionComp.tileWidth = tileWidth;
-                repositionComp.tileHeight = tileHeight;
+                repositionComp.tileWidth = effectiveWidth;
+                repositionComp.tileHeight = effectiveHeight;
+                repositionComp.localCenterOffset = effectiveCenterOffset;
                 repositionComp.gridCountX = gridSizeX;
                 repositionComp.gridCountY = gridSizeY;
                 repositionComp.showDebugLog = showDebugLog;
@@ -262,12 +291,14 @@ public class InfiniteGridManager : MonoBehaviour
 
                 if (showDebugLog)
                 {
-                    Debug.Log(string.Format("[InfiniteGridManager]   -> 타일 생성: '{0}' (좌표: X={1:F2}, Y={2:F2})", newGrid.name, posX, posY));
+                    Debug.Log(string.Format("[InfiniteGridManager]   -> 타일 밀착 생성: '{0}' (중심: X={1:F2}, Y={2:F2}, 스폰위치: {3})",
+                        newGrid.name, targetCenterX, targetCenterY, spawnPosition));
                 }
             }
         }
 
-        Debug.Log(string.Format("[InfiniteGridManager] ✅ Grid00 기반 3x3 무한 맵 생성 완료! (총 {0}개 타일, 규격: {1:F2} x {2:F2})", activeGrids.Count, tileWidth, tileHeight));
+        Debug.Log(string.Format("[InfiniteGridManager] ✅ Grid00 기반 3x3 무한 맵 생성 완료! (총 {0}개 타일, 틈새 없는 규격: {1:F2} x {2:F2})",
+            activeGrids.Count, effectiveWidth, effectiveHeight));
     }
 
     /// <summary>
@@ -277,9 +308,12 @@ public class InfiniteGridManager : MonoBehaviour
     {
         Vector3 center = playerTransform != null ? playerTransform.position : transform.position;
 
+        float effectiveWidth = tileWidth * tileScale;
+        float effectiveHeight = tileHeight * tileScale;
+
         // 3x3 전체 맵 범위 (보라색 와이어 박스)
         Gizmos.color = new Color(0.8f, 0.2f, 1f, 0.6f);
-        Gizmos.DrawWireCube(center, new Vector3(tileWidth * (float)gridSizeX, tileHeight * (float)gridSizeY, 0f));
+        Gizmos.DrawWireCube(center, new Vector3(effectiveWidth * (float)gridSizeX, effectiveHeight * (float)gridSizeY, 0f));
 
         // 플레이어 중심점 (빨간색 구체)
         if (playerTransform != null)
