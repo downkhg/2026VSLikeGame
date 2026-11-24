@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -131,32 +131,40 @@ public class Dynamic : MonoBehaviour
         // 1. 숫자키 (1~7): 액티브 무기 실시간 변경
         HandleWeaponSwitchInput();
 
+        Vector3 vKeyDir = Vector3.zero;
+
         // 2. 이동 조작 (상, 하, 좌, 우 이동)
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
         {
-            transform.position += Vector3.right * Speed * Time.deltaTime;
+            //transform.position += Vector3.right * Speed * Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0, 0, 0);
             dir = Vector3.right;
+            vKeyDir += Vector3.right;
         }
-
         if (Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.A))
         {
-            transform.position += Vector3.left * Speed * Time.deltaTime;
+            //transform.position += Vector3.left * Speed * Time.deltaTime;
             transform.localRotation = Quaternion.Euler(0, 180, 0);
             dir = Vector3.left;
+            vKeyDir += Vector3.left;
         }
 
         if (Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.W))
         {
-            transform.position += Vector3.up * Speed * Time.deltaTime;
+            //transform.position += Vector3.up * Speed * Time.deltaTime;
             dir = Vector3.up;
+            vKeyDir += Vector3.up;
         }
 
         if (Input.GetKey(KeyCode.DownArrow) || Input.GetKey(KeyCode.S))
         {
-            transform.position += Vector3.down * Speed * Time.deltaTime;
+            //transform.position += Vector3.down * Speed * Time.deltaTime;
             dir = Vector3.down;
+            vKeyDir += Vector3.down;
         }
+
+        vKeyDir.Normalize(); // 대각선 이동 시 속도 보정
+        transform.position += vKeyDir * Speed * Time.deltaTime;
 
         // 3. 점프 조작 (중력이 적용되는 플랫폼 모드 씬에서만 점프 가능)
         if (Input.GetKeyDown(KeyCode.Space))

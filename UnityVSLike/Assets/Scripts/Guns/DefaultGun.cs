@@ -7,6 +7,7 @@ public class DefaultGun : BaseGun
 {
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.DefaultGun;
         shotPower = 10f;
         fireInterval = 0.5f;
         searchRadius = 10f;

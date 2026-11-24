@@ -7,6 +7,7 @@ public class KunaiGun : BaseGun
 {
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.KunaiGun;
         shotPower = 10f;
         fireInterval = 0.5f;
         searchRadius = 10f;

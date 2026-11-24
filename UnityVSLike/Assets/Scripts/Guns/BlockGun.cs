@@ -31,6 +31,7 @@ public class BlockGun : BaseGun
 
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.BlockGun;
         shotPower = 10f;
         fireInterval = 2.0f;
         searchRadius = 8f;

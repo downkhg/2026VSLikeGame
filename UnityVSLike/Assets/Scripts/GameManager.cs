@@ -12,6 +12,12 @@ public class GameManager : MonoBehaviour
 
     static GameManager instance;
 
+    public static GameManager GetInstance()
+    {
+        return instance;
+    }
+
+    // 하위 호환용 오타 메서드 별칭 (기존 코드와의 100% 호환성 보장)
     public static GameManager GetInstacne()
     {
         return instance;
@@ -38,6 +44,17 @@ public class GameManager : MonoBehaviour
             {
                 GameObject gridMgrObj = new GameObject("@InfiniteGridManager");
                 infiniteGridManager = gridMgrObj.AddComponent<InfiniteGridManager>();
+            }
+        }
+
+        // 동적 몬스터 스포너가 씬에 없으면 자동 생성하여 무한 맵 몬스터 스폰 활성화
+        if (monsterSpawner == null)
+        {
+            monsterSpawner = FindFirstObjectByType<MonsterSpawner>();
+            if (monsterSpawner == null)
+            {
+                GameObject spawnerObj = new GameObject("@MonsterSpawner");
+                monsterSpawner = spawnerObj.AddComponent<MonsterSpawner>();
             }
         }
     }
@@ -105,13 +122,14 @@ public class GameManager : MonoBehaviour
 
     public GUIPlayerInfo guiPlayerInfo;
 
-    [Header("무한 맵 매니저")]
+    [Header("무한 맵 매니저 및 몬스터 스포너")]
     public InfiniteGridManager infiniteGridManager;
+    public MonsterSpawner monsterSpawner;
 
     [Header("버전 관리 (트러블슈팅 문서 기준)")]
     public int majorVersion = 0;
     public int releaseVersion = 00;
-    public int patchVersion = 12;
+    public int patchVersion = 14;
 
     [Header("Legacy GUI (OnGUI) 테스트 On/Off 설정")]
     public bool enableLegacyGUI = true;
@@ -265,6 +283,26 @@ public class GameManager : MonoBehaviour
             description = "Grid00 무한 맵 타일 크기 불일치(실제 2.08x2.08 vs 3.04x2.88)로 인해 타일 사이에 틈새(공백) 발생 및 기즈모 오프셋 어긋남 문제",
             cause = "Tilemap 프리팹 애셋의 비압축 바운즈(19x18)를 사용하여 간격이 과대 계산되었고, 타일맵의 로컬 원점 오프셋(피벗)이 중앙이 아닌 좌하단에 위치하여 발생",
             solution = "Tilemap.CompressBounds() 및 cellBounds를 통해 실제 그려진 타일 크기(13x13=2.08x2.08)를 자동 측정하고, localCenterOffset을 적용하여 타일 간 틈새 없는 완벽 밀착 및 기즈모/거리 판정 중심점 보정 구현"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "변경사항",
+            foundVersion = "0.00.12",
+            status = "수정완료",
+            appliedVersion = "0.00.13",
+            description = "무한 맵에서 다양한 패턴 프리팹을 배열에 등록하고 3x3 격자 및 재배치 시 무작위(랜덤)로 생성/교체되도록 기능 추가",
+            cause = "단일 타일 패턴(Grid00)만 반복되어 맵 구성이 단조로웠던 문제",
+            solution = "InfiniteGridManager에 patternPrefabs 배열 및 GetRandomPatternPrefab()을 구현하고, 초기 생성과 RepositionGrid 재배치 시 무작위 패턴으로 갱신되도록 확장"
+        },
+        new TroubleshootingEntry()
+        {
+            type = "시스템",
+            foundVersion = "0.00.13",
+            status = "수정완료",
+            appliedVersion = "0.00.14",
+            description = "뱀서라이크 게임 루프 완성: 몬스터 동적 스포너(MonsterSpawner), 경험치 젬(ExpGem) 드롭/자석 흡수, SoundManager 13종 SFX 연동, 탑다운 추적 AI 및 카메라/배트/탄환 버그 개선",
+            cause = "무한 맵 내 몬스터 스폰 부재로 인한 맵 공백, 즉각적 수치 경험치 지급으로 인한 손맛 부재, 사운드 미연동, 탄환 관통 및 배트 공격 대미지 미적용 버그",
+            solution = "플레이어 시야 밖 동적 MonsterSpawner 구현, 몬스터 사망 시 ExpGem 드롭 및 플레이어 자석 흡수 시스템 구축, 13종 ShootingSound를 관리/재생하는 SoundManager 구축, 탑다운 추적 AI(Opossum, Eagle) 및 CameraTracker LateUpdate 보간 적용, Bullet 피격 파괴 및 배트 공격 대미지 복구 완료"
         }
     };
 

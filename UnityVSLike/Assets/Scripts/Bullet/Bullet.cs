@@ -68,6 +68,13 @@ public class Bullet : MonoBehaviour
         }
     }
 
+    [Header("=== 관통 설정 ===")]
+    [Tooltip("관통 여부. false이면 몬스터 피격 시 즉시 탄환이 소멸합니다.")]
+    public bool isPiercing = false;
+    [Tooltip("최대 관통 횟수 (isPiercing이 true일 때 적용)")]
+    public int maxPierceCount = 1;
+    protected int currentHitCount = 0;
+
     protected virtual void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.gameObject.CompareTag("Monster"))
@@ -96,6 +103,14 @@ public class Bullet : MonoBehaviour
         else
         {
             target.OnDamaged(10);
+        }
+
+        currentHitCount++;
+
+        // 관통 탄환이 아니거나 최대 관통 횟수에 도달했으면 탄환 소멸
+        if (!isPiercing || currentHitCount >= maxPierceCount)
+        {
+            Destroy(gameObject);
         }
     }
 

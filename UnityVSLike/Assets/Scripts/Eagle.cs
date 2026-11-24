@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -105,19 +105,33 @@ public class Eagle : MonoBehaviour
 
     void FindProcess()
     {
+        // 이미 대상을 추적 중이면 탐색 생략
+        if (curState == E_AI_STATE.TRACKING && objTarget != null) return;
+
         int nLayer = 1 << LayerMask.NameToLayer("Player");
-        Collider2D collider =
-            //Physics2D.OverlapCircle(this.transform.position, Site);
-            Physics2D.OverlapCircle(this.transform.position, Site, nLayer);
+        Collider2D collider = Physics2D.OverlapCircle(this.transform.position, Site > 2.0f ? Site : 8.0f, nLayer);
         if (collider)
         {
             objTarget = collider.gameObject;
             SetAIState(E_AI_STATE.TRACKING);
+            return;
+        }
+
+        // 탑다운 무한 맵 환경: 순찰 지점이 없으면 플레이어를 자동 탐색하여 추적
+        if (objPatrolPoint == null && objResponPoint == null && objTarget == null)
+        {
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+            {
+                objTarget = playerObj;
+                SetAIState(E_AI_STATE.TRACKING);
+            }
         }
     }
 
     private void Awake()
     {
+        if (Site < 2.0f) Site = 8.0f; // 탑다운 맵을 위한 시야 반경 기본값 보정
         SetAIState(curState);
     }
 
@@ -128,9 +142,17 @@ public class Eagle : MonoBehaviour
 
     void Update()
     {
-        //TargetTrackingProcess();
-        //PatolProcess();
         UpdateAIState();
+
+        // 추적 대상 방향으로 스프라이트 좌우 반전
+        if (objTarget != null)
+        {
+            SpriteRenderer sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                sr.flipX = (objTarget.transform.position.x - transform.position.x) > 0;
+            }
+        }
     }
 
     private void OnDrawGizmos()
@@ -141,30 +163,41 @@ public class Eagle : MonoBehaviour
     private void FixedUpdate()
     {
         FindProcess();
-
         ProcessAttack(); 
     }
-
-    // Update is called once per frame
 
     void ProcessAttack()
     {
         CircleCollider2D circleCollider2D = GetComponent<CircleCollider2D>();
-        Vector2 vPos = (Vector2)transform.position + circleCollider2D.offset;
-        Collider2D collider = Physics2D.OverlapCircle(transform.position, circleCollider2D.radius, attacklayerMask);
+        if (circleCollider2D == null) return;
 
-        if (collider)
+        Collider2D collider = Physics2D.OverlapCircle(transform.position, circleCollider2D.radius, attacklayerMask);
+        if (collider != null)
         {
             Player target = collider.gameObject.GetComponent<Player>();
             Player attaker = this.gameObject.GetComponent<Player>();
-            SuperMode superMode = target.GetComponent<SuperMode>();
-
-            if (superMode.isUse == false)
+            if (target != null && !target.isDead)
             {
-                attaker.Attack(target);
-                superMode.OnMode();
+                SuperMode superMode = target.GetComponent<SuperMode>();
+                bool canAttack = (superMode == null || !superMode.isUse);
+
+                if (canAttack)
+                {
+                    if (attaker != null)
+                    {
+                        attaker.Attack(target);
+                    }
+                    else
+                    {
+                        target.OnDamaged(10);
+                    }
+
+                    if (superMode != null)
+                    {
+                        superMode.OnMode();
+                    }
+                }
             }
-            //Destroy(collision.gameObject);
         }
     }
 

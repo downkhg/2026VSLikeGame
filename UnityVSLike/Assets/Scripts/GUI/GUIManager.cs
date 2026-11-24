@@ -36,7 +36,42 @@ public class GUIManager : MonoBehaviour
     private void Start()
     {
         Debug.Log("GUIManager.Start()");
+        AutoBindButtons();
         SetGUIStatus(curGUIStatus);
+    }
+
+    /// <summary>
+    /// UI 캔버스 내의 버튼(Start, Retry, ToTitle, Exit)을 탐색하여 해당 메서드와 자동 연결합니다.
+    /// </summary>
+    private void AutoBindButtons()
+    {
+        Button[] allButtons = GetComponentsInChildren<Button>(true);
+        for (int i = 0; i < allButtons.Length; i++)
+        {
+            Button btn = allButtons[i];
+            string btnName = btn.gameObject.name.ToLower();
+
+            if (btnName.Contains("retry"))
+            {
+                btn.onClick.RemoveListener(EventRetry);
+                btn.onClick.AddListener(EventRetry);
+            }
+            else if (btnName.Contains("totitle"))
+            {
+                btn.onClick.RemoveListener(EventToTitle);
+                btn.onClick.AddListener(EventToTitle);
+            }
+            else if (btnName.Contains("exit"))
+            {
+                btn.onClick.RemoveListener(EventExit);
+                btn.onClick.AddListener(EventExit);
+            }
+            else if (btnName == "title" || btnName.Contains("start"))
+            {
+                btn.onClick.RemoveListener(EventStart);
+                btn.onClick.AddListener(EventStart);
+            }
+        }
     }
 
     GameManager gameManager;
@@ -227,23 +262,50 @@ public class GUIManager : MonoBehaviour
         SetGUIStatus(E_GUI_STATUS.PLAY);
     }
 
+    public void EventRetry()
+    {
+        Debug.Log("GUIManager.EventRetry() - 게임 재시작");
+        Time.timeScale = 1.0f;
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void EventToTitle()
+    {
+        Debug.Log("GUIManager.EventToTitle() - 타이틀 화면으로 이동");
+        SetGUIStatus(E_GUI_STATUS.TITILE);
+    }
+
     public void EventExit()
     {
         Debug.Log("GUIManager.EventExit()");
         Application.Quit();
     }
 
-    public Button tilteEndButton;
+    public Button titleEndButton;
 
-    public void SetTitleButtonEvet()
+    // 하위 호환용 오타 필드 별칭
+    public Button tilteEndButton
     {
-        if (tilteEndButton != null)
+        get => titleEndButton;
+        set => titleEndButton = value;
+    }
+
+    public void SetTitleButtonEvent()
+    {
+        if (titleEndButton != null)
         {
-            tilteEndButton.onClick.AddListener(() =>
+            titleEndButton.onClick.AddListener(() =>
             {
                 Debug.Log("GUIInventory: Title Button Clicked");
                 EventStart();
             });
         }
+    }
+
+    // 하위 호환용 오타 메서드 별칭
+    public void SetTitleButtonEvet()
+    {
+        SetTitleButtonEvent();
     }
 }

@@ -7,17 +7,7 @@ using UnityEngine;
 /// </summary>
 public class TotalGun : BaseGun
 {
-    // 1. 무기 상태를 정의하는 enum
-    public enum GunType
-    {
-        DefaultGun,
-        KunaiGun,
-        ShotGun,
-        RocketLauncher,
-        SoccerGun,
-        BlockGun,
-        LightningShield
-    }
+    // 글로벌 GunType 열거형(GunType.cs)을 일원화하여 사용합니다.
 
     [Header("=== 현재 무기 상태 (Gun State) ===")]
     [SerializeField] private GunType currentGunType = GunType.DefaultGun;
@@ -70,6 +60,7 @@ public class TotalGun : BaseGun
     public void SetGunType(GunType newGunType, bool updateObjectName = false)
     {
         currentGunType = newGunType;
+        gunType = newGunType;
         fireTimer = 0f; // 상태 전환 시 타이머 리셋
 
         // enum에 따라 각 무기의 기본 스펙과 프리팹 적용

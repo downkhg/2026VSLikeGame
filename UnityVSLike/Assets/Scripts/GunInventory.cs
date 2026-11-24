@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -297,6 +297,10 @@ public class GunInventory : MonoBehaviour
 
         return fallbackComp;
     }
+
+    [Header("=== 실드 기믹 설정 ===")]
+    [Tooltip("체크 시 피격당했을 때 총기를 1개 소모하여 대미지를 완전히 방어합니다.")]
+    public bool useGunAsShield = false;
 
     /// <summary>
     /// 피격 시 총기를 실드처럼 1개 소모하여 데미지를 방어합니다.

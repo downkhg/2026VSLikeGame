@@ -14,6 +14,7 @@ public class SoccerGun : BaseGun
 
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.SoccerGun;
         shotPower = 12f;
         fireInterval = 2.0f;
         searchRadius = 10f;

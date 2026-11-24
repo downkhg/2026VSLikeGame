@@ -7619,11 +7619,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   autoGenerate3x3: 1
-  gridPrefab: {fileID: 6651589272596923471, guid: 6ed629da08dad2f4bb6e71aa6ef729da,
+  patternPrefabs: []
+  keepCenterDefault: 0
+  changePatternOnReposition: 1
+  gridPrefab: {fileID: 8165742601152655809, guid: 52ea05cccd7f0c6438a5a37a575d1ce2,
     type: 3}
   playerTransform: {fileID: 7408771728898046338}
   tileWidth: 30.4
   tileHeight: 2.88
+  localCenterOffset: {x: 1.04, y: 1.04, z: 0}
+  tileScale: 1
   gridSizeX: 3
   gridSizeY: 3
   activeGrids: []
@@ -8603,7 +8608,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objTarget: {fileID: 7408771728898046336}
-  Speed: 1
+  Speed: 5
 --- !u!114 &1845123010 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8140706842961109644, guid: b887a2f70cdb1774fb95d889e04a4e5c,
@@ -9064,11 +9069,11 @@ RectTransform:
   - {fileID: 498803476}
   m_Father: {fileID: 1262989856}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -608, y: 354}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: -0.000030517578, y: 0}
   m_SizeDelta: {x: 150, y: 60}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 1}
 --- !u!114 &1943611738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10609,7 +10614,7 @@ MonoBehaviour:
   JumpPower: 250
   isJump: 0
   Score: 0
-  Speed: 1
+  Speed: 5
   gunInventory: {fileID: 0}
   gun: {fileID: 0}
   dir: {x: 1, y: 0, z: 0}

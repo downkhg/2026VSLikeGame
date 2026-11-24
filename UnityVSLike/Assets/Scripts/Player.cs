@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -77,6 +77,11 @@ public class Player : MonoBehaviour
     }
 
     /// <summary>
+    [Header("=== 드롭 설정 ===")]
+    [Tooltip("적 처치 시 경험치 보석(ExpGem)을 바닥에 드롭할지 여부 (뱀서라이크 스타일)")]
+    public bool dropExpGem = true;
+
+    /// <summary>
     /// 피격 처리 (HP 감소, 플로팅 대미지 출력 및 막타 처치자에게 보상 지급)
     /// </summary>
     /// <param name="damage">입는 피해량</param>
@@ -85,9 +90,24 @@ public class Player : MonoBehaviour
     {
         if (isDead) return;
 
+        // 0. 실드(총기) 옵션이 켜져 있고 플레이어라면 총기를 소모하여 피해 완전 방어
+        if (CompareTag("Player") && gunInventory != null && gunInventory.useGunAsShield)
+        {
+            if (gunInventory.ConsumeShieldGun())
+            {
+                return;
+            }
+        }
+
         // 1. 실제 체력 감소 적용
         hp = Mathf.Max(0, hp - damage);
         Debug.Log($"<color=red>[Player] '{gameObject.name}' 피격! -{damage} 데미지 (남은 HP: {hp}/{hpMax})</color>");
+
+        // 플레이어 피격 효과음 재생
+        if (CompareTag("Player") && SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayHitSound();
+        }
 
         // 2. 화면 GUI에 플로팅 대미지 텍스트 출력 (플레이어 피격: 빨간색, 몬스터 피격: 노란색)
         DamageTextManager.ShowDamage(transform.position, damage, CompareTag("Player"));
@@ -131,8 +151,15 @@ public class Player : MonoBehaviour
         int gainedExp = victim != null ? victim.expReward : 35;
         int gainedScore = victim != null ? victim.scoreReward : 100;
 
-        // 1. 막타 공격자에게 경험치 지급 및 레벨업 체크
-        AddExp(gainedExp);
+        // 1. 뱀서라이크 스타일: 바닥에 경험치 보석 드롭 (자석 흡수)
+        if (dropExpGem && victim != null)
+        {
+            ExpGem.Spawn(victim.transform.position, gainedExp);
+        }
+        else
+        {
+            AddExp(gainedExp);
+        }
 
         // 2. 막타 공격자에게 점수 가산 (Dynamic 컴포넌트 연동)
         Dynamic dynamic = GetComponent<Dynamic>();
@@ -175,6 +202,11 @@ public class Player : MonoBehaviour
     {
         Lv++;
         Debug.Log($"<color=yellow>★ [Player] LEVEL UP! 현재 레벨: {Lv} (다음 레벨 필요 EXP: {expMax}) ★</color>");
+
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayLevelUpSound();
+        }
 
         if (gunInventory != null)
         {

@@ -1,41 +1,69 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class SuperMode : MonoBehaviour
 {
-    public bool isUse;
-    public float Time;
+    [Header("=== 무적 모드 설정 ===")]
+    public bool isUse = false;
+    [Tooltip("무적 지속 시간(초)")]
+    public float duration = 1.0f;
 
-    IEnumerator ProcessTimmer()
+    // 하위 호환용 프로퍼티 (Time 변수명 섀도잉 방지)
+    public float Time
+    {
+        get => duration;
+        set => duration = value;
+    }
+
+    private SpriteRenderer cachedRenderer;
+
+    private void Awake()
+    {
+        cachedRenderer = GetComponent<SpriteRenderer>();
+    }
+
+    private IEnumerator ProcessTimer()
     {
         isUse = true;
-        yield return new WaitForSeconds(Time);
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += UnityEngine.Time.deltaTime;
+            if (cachedRenderer != null)
+            {
+                // 피격 시 주기적인 반투명 깜빡임 효과
+                float alpha = Mathf.PingPong(elapsed * 10f, 0.7f) + 0.3f;
+                Color col = cachedRenderer.color;
+                col.a = alpha;
+                cachedRenderer.color = col;
+            }
+            yield return null;
+        }
+
         isUse = false;
-        GetComponent<SpriteRenderer>().color = Color.white;
+        if (cachedRenderer != null)
+        {
+            Color col = cachedRenderer.color;
+            col.a = 1.0f;
+            cachedRenderer.color = col;
+        }
     }
 
     public void OnMode()
     {
-        StartCoroutine(ProcessTimmer());
+        StartCoroutine(ProcessTimer());
     }
 
-    // Start is called before the first frame update
+    // 하위 호환용 오타 메서드 별칭
+    public IEnumerator ProcessTimmer()
+    {
+        return ProcessTimer();
+    }
+
     void Start()
     {
         if (isUse) OnMode();
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if(isUse)
-        {
-            SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
-            Color color = spriteRenderer.color;
-            if (color.a == 1) color.a = 0;
-            else color.a = 1;
-            spriteRenderer.color = color;
-        }
     }
 }

@@ -58,6 +58,10 @@ public class UILevelUpCard : MonoBehaviour
     {
         if (currentItem != null)
         {
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.PlayLevelUpSound();
+            }
             onSelectCallback?.Invoke(currentItem);
         }
     }

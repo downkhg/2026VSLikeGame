@@ -65,6 +65,7 @@
     <Compile Include="Assets\Scripts\Guns\DefaultGun.cs" />
     <Compile Include="Assets\Scripts\ItemInfo.cs" />
     <Compile Include="Assets\Scripts\Responner.cs" />
+    <Compile Include="Assets\Scripts\ExpGem.cs" />
     <Compile Include="Assets\Scripts\GUI\UIGunStatusPopup.cs" />
     <Compile Include="Assets\Scripts\RepositionGrid.cs" />
     <Compile Include="Assets\Scripts\ItemInfoManager.cs" />
@@ -77,7 +78,9 @@
     <Compile Include="Assets\Scripts\Bullet\BlockBullet.cs" />
     <Compile Include="Assets\Scripts\GUI\UIGunSlotButton.cs" />
     <Compile Include="Assets\Scripts\DeathZone.cs" />
+    <Compile Include="Assets\Scripts\MonsterSpawner.cs" />
     <Compile Include="Assets\Scripts\Guns\SoccerGun.cs" />
+    <Compile Include="Assets\Scripts\SoundManager.cs" />
     <Compile Include="Assets\Scripts\Bullet\ExplosionEffect.cs" />
     <Compile Include="Assets\Scripts\Guns\LightningShield.cs" />
     <Compile Include="Assets\Scripts\Guns\ShotGun.cs" />
@@ -114,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\WorkList2.txt" />
+    <None Include="Assets\ShootingSound\ReadMe.txt" />
     <None Include="Assets\WorkList.txt" />
     <None Include="Assets\용어정리.txt" />
     <None Include="Assets\ClassDiagram1.cd" />

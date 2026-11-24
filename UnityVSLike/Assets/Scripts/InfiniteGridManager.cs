@@ -4,22 +4,34 @@ using UnityEngine;
 using UnityEngine.Tilemaps;
 
 /// <summary>
-/// Grid00 프리팹을 활용하여 플레이어 주변에 3x3 격자 타일을 생성하고,
-/// 무한 반복 맵을 빈틈없이 완벽하게 관리하는 매니저 컴포넌트입니다.
+/// 여러 가지 타일 패턴 프리팹을 배열에 등록하고,
+/// 3x3 무한 격자 맵에 무작위(랜덤)로 배치 및 재배치 교체를 관리하는 매니저 컴포넌트입니다.
 /// </summary>
 public class InfiniteGridManager : MonoBehaviour
 {
     [Header("=== 무한 맵 생성 설정 ===")]
-    [Tooltip("체크 시 Grid00 프리팹으로 3x3(9개) 무한 격자를 자동 생성합니다.")]
+    [Tooltip("체크 시 패턴 프리팹들로 3x3(9개) 무한 격자를 자동 생성합니다.")]
     public bool autoGenerate3x3 = true;
 
-    [Header("=== 타일 프리팹 (비어있으면 Resources/Prefabs/Tiles/Grid00 자동 로드) ===")]
+    [Header("=== 패턴 프리팹 배열 (인스펙터 등록) ===")]
+    [Tooltip("무한 맵에 랜덤으로 배치할 타일 패턴 프리팹 목록입니다. 인스펙터에서 여러 개를 등록할 수 있습니다.")]
+    public GameObject[] patternPrefabs;
+
+    [Header("=== 시작 시 중앙 타일 고정 옵션 ===")]
+    [Tooltip("체크 시 플레이어가 서 있는 시작 중앙 타일은 첫 번째 패턴(기본)으로 고정 생성합니다.")]
+    public bool keepCenterDefault = false;
+
+    [Header("=== 재배치 시 새로운 패턴 교체 설정 ===")]
+    [Tooltip("체크 시 화면 밖으로 밀려난 타일이 재배치될 때도 패턴 배열에서 새로운 랜덤 패턴으로 교체됩니다.")]
+    public bool changePatternOnReposition = true;
+
+    [Header("=== 단일 프리팹 (하위 호환용 fallback) ===")]
     public GameObject gridPrefab;
 
     [Header("=== 추적 대상 플레이어 ===")]
     public Transform playerTransform;
 
-    [Header("=== 타일 크기 설정 (Grid00 실제 크기: 가로 2.08 x 세로 2.08) ===")]
+    [Header("=== 타일 크기 설정 (Grid00 기준: 가로 2.08 x 세로 2.08) ===")]
     [Tooltip("타일 1개의 가로 크기입니다. Grid00은 13칸 * 0.16 = 2.08 입니다.")]
     public float tileWidth = 2.08f;
     [Tooltip("타일 1개의 세로 크기입니다. Grid00은 13칸 * 0.16 = 2.08 입니다.")]
@@ -47,39 +59,34 @@ public class InfiniteGridManager : MonoBehaviour
 
     private void Awake()
     {
-        // 1. 프리팹이 비어있으면 Resources에서 Grid00 로드
-        if (gridPrefab == null)
+        // 1. 인스펙터에 패턴 배열이 등록되어 있지 않다면 Resources/Prefabs/Tiles 에서 모든 프리팹 자동 로드
+        if (patternPrefabs == null || patternPrefabs.Length == 0)
         {
-            gridPrefab = Resources.Load<GameObject>("Prefabs/Tiles/Grid00");
-            if (gridPrefab != null && showDebugLog)
+            patternPrefabs = Resources.LoadAll<GameObject>("Prefabs/Tiles");
+            if (patternPrefabs != null && patternPrefabs.Length > 0 && showDebugLog)
             {
-                Debug.Log("[InfiniteGridManager] Resources/Prefabs/Tiles/Grid00 프리팹 로드 완료.");
+                Debug.Log(string.Format("[InfiniteGridManager] Resources/Prefabs/Tiles에서 {0}개의 패턴 프리팹을 자동 등록했습니다.", patternPrefabs.Length));
             }
         }
 
-        // 2. 씬에 이미 Grid00이 있다면 프리팹 fallback으로 참조
-        if (gridPrefab == null)
+        // 2. 단일 프리팹 fallback
+        if ((patternPrefabs == null || patternPrefabs.Length == 0) && gridPrefab != null)
+        {
+            patternPrefabs = new GameObject[] { gridPrefab };
+        }
+
+        // 3. 씬 내 Grid00 오브젝트 fallback
+        if (patternPrefabs == null || patternPrefabs.Length == 0)
         {
             GameObject sceneGrid = GameObject.Find("Grid00");
             if (sceneGrid != null)
             {
-                gridPrefab = sceneGrid;
-                if (showDebugLog)
-                {
-                    Debug.Log("[InfiniteGridManager] 씬 내 Grid00 오브젝트를 템플릿으로 참조 완료.");
-                }
+                patternPrefabs = new GameObject[] { sceneGrid };
             }
         }
 
-        // 3. 실제 그려진 타일 크기 자동 측정
-        if (gridPrefab != null)
-        {
-            MeasureActualTileSize();
-        }
-        else
-        {
-            Debug.LogWarning("[InfiniteGridManager] ⚠️ Grid00 프리팹 또는 오브젝트를 찾을 수 없습니다.");
-        }
+        // 4. 대표 프리팹으로 타일 규격 자동 측정
+        MeasureActualTileSize();
     }
 
     private void Start()
@@ -110,7 +117,7 @@ public class InfiniteGridManager : MonoBehaviour
                 lastLoggedPlayerPosition = playerTransform.position;
             }
         }
-        // 2. 플레이어 이동 상태 모니터링 로그 (1유닛 이상 이동할 때마다 출력)
+        // 2. 플레이어 이동 상태 모니터링 로그
         else if (showDebugLog)
         {
             float movedDistance = Vector3.Distance(playerTransform.position, lastLoggedPlayerPosition);
@@ -121,6 +128,20 @@ public class InfiniteGridManager : MonoBehaviour
                     playerTransform.position.x, playerTransform.position.y));
             }
         }
+    }
+
+    /// <summary>
+    /// 등록된 패턴 프리팹 배열에서 무작위(랜덤)로 1개의 프리팹을 선택하여 반환합니다.
+    /// </summary>
+    public GameObject GetRandomPatternPrefab()
+    {
+        if (patternPrefabs == null || patternPrefabs.Length == 0)
+        {
+            return gridPrefab;
+        }
+
+        int randomIndex = Random.Range(0, patternPrefabs.Length);
+        return patternPrefabs[randomIndex];
     }
 
     /// <summary>
@@ -158,14 +179,26 @@ public class InfiniteGridManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 임시 타일을 생성하여 Tilemap.CompressBounds()를 실행하고, 실제 그려진 정확한 타일 크기와 중심 오프셋을 측정합니다.
+    /// 샘플 타일을 임시 생성하여 실제 그려진 타일 크기(cellBounds)와 중심 오프셋을 100% 정밀 측정합니다.
     /// </summary>
     private void MeasureActualTileSize()
     {
-        if (gridPrefab == null) return;
+        GameObject samplePrefab = null;
+        if (patternPrefabs != null && patternPrefabs.Length > 0)
+        {
+            samplePrefab = patternPrefabs[0];
+        }
+        else if (gridPrefab != null)
+        {
+            samplePrefab = gridPrefab;
+        }
 
-        // 임시 오브젝트를 인스턴스화하여 정확한 타일 영역 측정
-        GameObject tempObj = Instantiate(gridPrefab, new Vector3(9999f, 9999f, 0f), Quaternion.identity);
+        if (samplePrefab == null)
+        {
+            return;
+        }
+
+        GameObject tempObj = Instantiate(samplePrefab, new Vector3(9999f, 9999f, 0f), Quaternion.identity);
         Tilemap tilemap = tempObj.GetComponentInChildren<Tilemap>();
         if (tilemap != null)
         {
@@ -197,19 +230,19 @@ public class InfiniteGridManager : MonoBehaviour
 
         if (showDebugLog)
         {
-            Debug.Log(string.Format("[InfiniteGridManager] 📐 타일 규격 자동 측정 완료 -> 가로: {0:F2}, 세로: {1:F2}, 중심오프셋: {2}",
-                tileWidth, tileHeight, localCenterOffset));
+            Debug.Log(string.Format("[InfiniteGridManager] 📐 타일 규격 자동 측정 완료 -> 가로: {0:F2}, 세로: {1:F2}, 중심오프셋: {2} (등록된 패턴 수: {3}개)",
+                tileWidth, tileHeight, localCenterOffset, patternPrefabs != null ? patternPrefabs.Length : 0));
         }
     }
 
     /// <summary>
-    /// 플레이어 시작 위치를 중심으로 3x3 격자 타일을 틈새 없이 완벽하게 밀착 생성하고 재배치 컴포넌트를 연결합니다.
+    /// 플레이어 시작 위치를 중심으로 3x3 격자 타일을 패턴 배열에서 무작위 선택하여 틈새 없이 생성합니다.
     /// </summary>
     public void InitializeInfiniteGrids()
     {
-        if (gridPrefab == null)
+        if (patternPrefabs == null || patternPrefabs.Length == 0)
         {
-            Debug.LogError("[InfiniteGridManager] ❌ Grid00 프리팹이 없어 무한 맵을 생성할 수 없습니다.");
+            Debug.LogError("[InfiniteGridManager] ❌ 등록된 타일 패턴 프리팹이 없어 무한 맵을 생성할 수 없습니다.");
             return;
         }
 
@@ -254,8 +287,8 @@ public class InfiniteGridManager : MonoBehaviour
 
         if (showDebugLog)
         {
-            Debug.Log(string.Format("[InfiniteGridManager] 🛠️ {0}x{1} 무한 격자 타일 자동 밀착 생성 시작... (중심 좌표: {2}, 스케일: {3})",
-                gridSizeX, gridSizeY, centerPosition, tileScale));
+            Debug.Log(string.Format("[InfiniteGridManager] 🛠️ {0}x{1} 무한 격자 타일 랜덤 패턴 생성 시작... (패턴 종류: {2}개, 중심 좌표: {3})",
+                gridSizeX, gridSizeY, patternPrefabs.Length, centerPosition));
         }
 
         // 3x3 (총 9개) 격자 생성: x(-1 ~ 1), y(-1 ~ 1)
@@ -263,13 +296,29 @@ public class InfiniteGridManager : MonoBehaviour
         {
             for (int x = -halfX; x <= halfX; x++)
             {
+                // 중앙 타일이고 keepCenterDefault 옵션이 켜져 있으면 첫 번째 패턴, 그 외에는 랜덤 선택
+                GameObject selectedPrefab = null;
+                if (x == 0 && y == 0 && keepCenterDefault)
+                {
+                    selectedPrefab = patternPrefabs[0];
+                }
+                else
+                {
+                    selectedPrefab = GetRandomPatternPrefab();
+                }
+
+                if (selectedPrefab == null)
+                {
+                    continue;
+                }
+
                 // 타일의 실제 그래픽 중심이 정확히 (centerPosition + (x * width, y * height))에 오도록 스폰 좌표 계산
                 float targetCenterX = centerPosition.x + ((float)x * effectiveWidth);
                 float targetCenterY = centerPosition.y + ((float)y * effectiveHeight);
                 Vector3 spawnPosition = new Vector3(targetCenterX - effectiveCenterOffset.x, targetCenterY - effectiveCenterOffset.y, 0f);
 
-                GameObject newGrid = Instantiate(gridPrefab, spawnPosition, Quaternion.identity, this.transform);
-                newGrid.name = string.Format("Grid_{0}_{1}", x + halfX, y + halfY);
+                GameObject newGrid = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity, this.transform);
+                newGrid.name = string.Format("Grid_{0}_{1}_{2}", x + halfX, y + halfY, selectedPrefab.name);
                 newGrid.transform.localScale = new Vector3(tileScale, tileScale, 1f);
 
                 // RepositionGrid 컴포넌트 부착 및 설정
@@ -279,26 +328,78 @@ public class InfiniteGridManager : MonoBehaviour
                     repositionComp = newGrid.AddComponent<RepositionGrid>();
                 }
 
+                repositionComp.infiniteGridManager = this;
                 repositionComp.playerTransform = playerTransform;
                 repositionComp.tileWidth = effectiveWidth;
                 repositionComp.tileHeight = effectiveHeight;
                 repositionComp.localCenterOffset = effectiveCenterOffset;
                 repositionComp.gridCountX = gridSizeX;
                 repositionComp.gridCountY = gridSizeY;
+                repositionComp.changePatternOnReposition = changePatternOnReposition;
                 repositionComp.showDebugLog = showDebugLog;
 
                 activeGrids.Add(newGrid);
 
                 if (showDebugLog)
                 {
-                    Debug.Log(string.Format("[InfiniteGridManager]   -> 타일 밀착 생성: '{0}' (중심: X={1:F2}, Y={2:F2}, 스폰위치: {3})",
-                        newGrid.name, targetCenterX, targetCenterY, spawnPosition));
+                    Debug.Log(string.Format("[InfiniteGridManager]   -> 타일 생성: '{0}' (선택패턴: {1}, 중심좌표: X={2:F2}, Y={3:F2})",
+                        newGrid.name, selectedPrefab.name, targetCenterX, targetCenterY));
                 }
             }
         }
 
-        Debug.Log(string.Format("[InfiniteGridManager] ✅ Grid00 기반 3x3 무한 맵 생성 완료! (총 {0}개 타일, 틈새 없는 규격: {1:F2} x {2:F2})",
-            activeGrids.Count, effectiveWidth, effectiveHeight));
+        Debug.Log(string.Format("[InfiniteGridManager] ✅ 무한 맵 3x3 랜덤 생성 완료! (총 {0}개 타일, 패턴 풀: {1}개)",
+            activeGrids.Count, patternPrefabs.Length));
+    }
+
+    /// <summary>
+    /// 화면 밖으로 나간 타일을 제거하고, 이동된 새 위치에 패턴 배열에서 무작위로 선택한 새 패턴을 생성하여 교체합니다.
+    /// </summary>
+    public void ReplaceTile(GameObject oldTile, Vector3 newPosition)
+    {
+        if (oldTile != null)
+        {
+            activeGrids.Remove(oldTile);
+            Destroy(oldTile);
+        }
+
+        GameObject randomPrefab = GetRandomPatternPrefab();
+        if (randomPrefab == null)
+        {
+            return;
+        }
+
+        float effectiveWidth = tileWidth * tileScale;
+        float effectiveHeight = tileHeight * tileScale;
+        Vector3 effectiveCenterOffset = localCenterOffset * tileScale;
+
+        GameObject newGrid = Instantiate(randomPrefab, newPosition, Quaternion.identity, this.transform);
+        newGrid.name = string.Format("Grid_{0}", randomPrefab.name);
+        newGrid.transform.localScale = new Vector3(tileScale, tileScale, 1f);
+
+        RepositionGrid repositionComp = newGrid.GetComponent<RepositionGrid>();
+        if (repositionComp == null)
+        {
+            repositionComp = newGrid.AddComponent<RepositionGrid>();
+        }
+
+        repositionComp.infiniteGridManager = this;
+        repositionComp.playerTransform = playerTransform;
+        repositionComp.tileWidth = effectiveWidth;
+        repositionComp.tileHeight = effectiveHeight;
+        repositionComp.localCenterOffset = effectiveCenterOffset;
+        repositionComp.gridCountX = gridSizeX;
+        repositionComp.gridCountY = gridSizeY;
+        repositionComp.changePatternOnReposition = changePatternOnReposition;
+        repositionComp.showDebugLog = showDebugLog;
+
+        activeGrids.Add(newGrid);
+
+        if (showDebugLog)
+        {
+            Debug.Log(string.Format("[InfiniteGridManager] 🎲 타일 재배치 & 새 패턴 교체 완료: '{0}' (위치: {1})",
+                randomPrefab.name, newPosition));
+        }
     }
 
     /// <summary>

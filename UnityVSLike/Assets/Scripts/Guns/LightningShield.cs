@@ -31,6 +31,7 @@ public class LightningShield : BaseGun
 
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.LightningShield;
         shotPower = 10f;
         fireInterval = 1.5f;
         searchRadius = 10f;

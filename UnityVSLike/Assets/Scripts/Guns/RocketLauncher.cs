@@ -20,6 +20,7 @@ public class RocketLauncher : BaseGun
 
     protected override void InitDefaultSettings()
     {
+        gunType = GunType.RocketLauncher;
         shotPower = 15f;
         fireInterval = 1.5f;
         searchRadius = 10f;

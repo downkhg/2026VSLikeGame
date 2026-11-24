@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,16 +10,12 @@ public class BlockBullet : Bullet
 
     private bool isFalling = false;
     private bool isBallisticMode = false; // 역탄도 모드 여부
-    private int currentHitCount = 0;
 
     protected override void Awake()
     {
         base.Awake();
-    }
-
-    protected override void Start()
-    {
-        base.Start();
+        isPiercing = true;
+        maxPierceCount = maxHitCount;
     }
 
     // 1. 역탄도 모드 초기화 (계산된 포물선 속도 직접 적용)
@@ -121,12 +117,6 @@ public class BlockBullet : Bullet
             if (target != null)
             {
                 OnHitMonster(target);
-            }
-
-            currentHitCount++;
-            if (currentHitCount >= maxHitCount)
-            {
-                Destroy(gameObject);
             }
         }
     }

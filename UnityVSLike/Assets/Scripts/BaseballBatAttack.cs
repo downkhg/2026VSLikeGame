@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class BaseballBatAttack : MonoBehaviour
 {
@@ -68,16 +68,35 @@ public class BaseballBatAttack : MonoBehaviour
                 if (fAngle < fHalf)
                 {
                     Player targetPlayer = objTarget.GetComponent<Player>();
-                    if (targetPlayer && master)
+                    if (targetPlayer != null)
                     {
                         SuperMode supermode = targetPlayer.GetComponent<SuperMode>();
-                        if (!supermode.isUse)
+                        bool canAttack = (supermode == null || !supermode.isUse);
+
+                        if (canAttack)
                         {
-                            batSwing.Init(swingSpeed, attackAngle);
-                            batSwing.Swing();
-                            //master.Attack(targetPlayer);
-                            supermode.OnMode();
-                            Debug.Log("Bat Attack!");
+                            if (batSwing != null)
+                            {
+                                batSwing.Init(swingSpeed, attackAngle);
+                                batSwing.Swing();
+                            }
+
+                            int attackDamage = Mathf.RoundToInt(damage);
+                            if (master != null)
+                            {
+                                master.Attack(targetPlayer, attackDamage);
+                            }
+                            else
+                            {
+                                targetPlayer.OnDamaged(attackDamage);
+                            }
+
+                            if (supermode != null)
+                            {
+                                supermode.OnMode();
+                            }
+
+                            Debug.Log($"[BaseballBatAttack] ⚾ 배트 스윙 적중! 대상: {targetPlayer.name}, 대미지: {attackDamage}");
                         }
                     }
                     return;

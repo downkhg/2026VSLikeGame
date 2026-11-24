@@ -71,6 +71,21 @@ public abstract class BaseGun : MonoBehaviour
     /// </summary>
     protected virtual void InitDefaultSettings() { }
 
+    [Header("=== 무기 종류 식별 ===")]
+    [Tooltip("총기 종류 식별 열거형")]
+    public GunType gunType = GunType.DefaultGun;
+
+    /// <summary>
+    /// SoundManager를 통해 해당 총기 타입에 맞는 발사 효과음을 재생합니다.
+    /// </summary>
+    public virtual void PlayShotSound()
+    {
+        if (SoundManager.Instance != null)
+        {
+            SoundManager.Instance.PlayShootSound(gunType);
+        }
+    }
+
     protected virtual void Update()
     {
         // 1. 타겟 갱신 (타겟팅이 필요한 자식 무기만 오버라이드하여 수행)
@@ -93,6 +108,7 @@ public abstract class BaseGun : MonoBehaviour
                     fireDir = (target.position - spawnPos).normalized;
                 }
 
+                PlayShotSound();
                 Shot(fireDir);
             }
         }
@@ -131,6 +147,7 @@ public abstract class BaseGun : MonoBehaviour
             fireDir = (target.position - spawnPos).normalized;
         }
 
+        PlayShotSound();
         Shot(fireDir);
     }
 

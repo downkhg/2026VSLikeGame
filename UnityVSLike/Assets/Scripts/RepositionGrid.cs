@@ -9,8 +9,15 @@ using UnityEngine.Tilemaps;
 /// </summary>
 public class RepositionGrid : MonoBehaviour
 {
+    [Header("=== 무한 맵 매니저 참조 ===")]
+    public InfiniteGridManager infiniteGridManager;
+
     [Header("=== 추적 대상 플레이어 ===")]
     public Transform playerTransform;
+
+    [Header("=== 재배치 시 새로운 패턴 교체 설정 ===")]
+    [Tooltip("체크 시 화면 밖으로 나가 재배치될 때 패턴 배열에서 새로운 랜덤 패턴으로 교체됩니다.")]
+    public bool changePatternOnReposition = true;
 
     [Header("=== 타일 실제 크기 (Grid00 기준: 13칸 x 0.16 = 2.08) ===")]
     [Tooltip("타일의 가로 월드 크기입니다. 틈새가 생기지 않도록 실제 그려진 타일 크기와 정확히 일치해야 합니다.")]
@@ -166,90 +173,60 @@ public class RepositionGrid : MonoBehaviour
         float diffX = playerTransform.position.x - tileCenter.x;
         float diffY = playerTransform.position.y - tileCenter.y;
 
-        // 2. 가로(X축) 재배치 판정: 타일 너비의 1.5배 이상 멀어졌을 때
+        // 2. 가로/세로 재배치 필요 여부 판정 (임계값: 타일 크기의 1.5배)
         float thresholdX = tileWidth * 1.5f;
-        if (Mathf.Abs(diffX) > thresholdX)
-        {
-            RepositionX(diffX);
-        }
-
-        // 3. 세로(Y축) 재배치 판정: 타일 높이의 1.5배 이상 멀어졌을 때
         float thresholdY = tileHeight * 1.5f;
-        if (Mathf.Abs(diffY) > thresholdY)
+
+        bool needRepositionX = Mathf.Abs(diffX) > thresholdX;
+        bool needRepositionY = Mathf.Abs(diffY) > thresholdY;
+
+        // 대각선 또는 단일 축 이동 시 한 번에 안전하게 재배치 처리
+        if (needRepositionX || needRepositionY)
         {
-            RepositionY(diffY);
+            Reposition(diffX, diffY, needRepositionX, needRepositionY);
         }
     }
 
     /// <summary>
-    /// X축 방향으로 타일을 재배치합니다.
+    /// 타일을 플레이어 진행 방향 앞쪽으로 이동(재배치)하며, 설정에 따라 새 랜덤 패턴으로 교체합니다.
     /// </summary>
-    private void RepositionX(float diffX)
+    private void Reposition(float diffX, float diffY, bool repX, bool repY)
     {
-        // 플레이어가 오른쪽에 있으면 +1, 왼쪽에 있으면 -1
-        float directionX = 0f;
-        string dirText = "";
-        if (diffX > 0f)
-        {
-            directionX = 1f;
-            dirText = "오른쪽(+)";
-        }
-        else if (diffX < 0f)
-        {
-            directionX = -1f;
-            dirText = "왼쪽(-)";
-        }
-
-        // 전체 격자 너비(타일너비 * gridCountX)만큼 이동하여 빈틈없이 정렬
-        float moveDistanceX = directionX * tileWidth * (float)gridCountX;
         Vector3 previousPos = transform.position;
         Vector3 newPosition = transform.position;
-        newPosition.x = newPosition.x + moveDistanceX;
-        transform.position = newPosition;
+        string logDirection = "";
 
-        // 순간이동 궤적을 씬 뷰에 자홍색 선으로 2초간 시각화
+        if (repX)
+        {
+            float directionX = diffX > 0f ? 1f : -1f;
+            float moveDistX = directionX * tileWidth * (float)gridCountX;
+            newPosition.x += moveDistX;
+            logDirection += string.Format("가로({0}) ", directionX > 0f ? "오른쪽" : "왼쪽");
+        }
+
+        if (repY)
+        {
+            float directionY = diffY > 0f ? 1f : -1f;
+            float moveDistY = directionY * tileHeight * (float)gridCountY;
+            newPosition.y += moveDistY;
+            logDirection += string.Format("세로({0}) ", directionY > 0f ? "위쪽" : "아래쪽");
+        }
+
+        // 재배치 시 새로운 무작위 패턴으로 교체 옵션 처리
+        if (changePatternOnReposition && infiniteGridManager != null)
+        {
+            infiniteGridManager.ReplaceTile(this.gameObject, newPosition);
+            return;
+        }
+
+        // 패턴 교체 없이 위치만 이동
+        transform.position = newPosition;
         Debug.DrawLine(previousPos + localCenterOffset, newPosition + localCenterOffset, Color.magenta, 2.0f);
 
         if (showDebugLog)
         {
-            Debug.Log(string.Format("[RepositionGrid] 🔄 '{0}' 가로(X) 재배치! 거리차: {1:F2} -> 방향: {2}, 위치: {3:F2} => {4:F2}",
-                gameObject.name, diffX, dirText, previousPos.x, newPosition.x));
-        }
-    }
-
-    /// <summary>
-    /// Y축 방향으로 타일을 재배치합니다.
-    /// </summary>
-    private void RepositionY(float diffY)
-    {
-        // 플레이어가 위쪽에 있으면 +1, 아래쪽에 있으면 -1
-        float directionY = 0f;
-        string dirText = "";
-        if (diffY > 0f)
-        {
-            directionY = 1f;
-            dirText = "위쪽(+)";
-        }
-        else if (diffY < 0f)
-        {
-            directionY = -1f;
-            dirText = "아래쪽(-)";
-        }
-
-        // 전체 격자 높이(타일높이 * gridCountY)만큼 이동하여 빈틈없이 정렬
-        float moveDistanceY = directionY * tileHeight * (float)gridCountY;
-        Vector3 previousPos = transform.position;
-        Vector3 newPosition = transform.position;
-        newPosition.y = newPosition.y + moveDistanceY;
-        transform.position = newPosition;
-
-        // 순간이동 궤적을 씬 뷰에 자홍색 선으로 2초간 시각화
-        Debug.DrawLine(previousPos + localCenterOffset, newPosition + localCenterOffset, Color.magenta, 2.0f);
-
-        if (showDebugLog)
-        {
-            Debug.Log(string.Format("[RepositionGrid] 🔄 '{0}' 세로(Y) 재배치! 거리차: {1:F2} -> 방향: {2}, 위치: {3:F2} => {4:F2}",
-                gameObject.name, diffY, dirText, previousPos.y, newPosition.y));
+            Debug.Log(string.Format("[RepositionGrid] 🔄 '{0}' {1}재배치! 위치: {2} => {3}",
+                gameObject.name, logDirection, previousPos, newPosition));
         }
     }
 
